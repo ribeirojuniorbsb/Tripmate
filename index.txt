@@ -1,0 +1,11 @@
+
+
+🗺️ TripMate
+Organize suas viagens em grupo
+E-MAIL
+SENHA
+Entrar Criar conta
+Contas de teste
+sysadmin@tripmate.com / admin123 — SysAdmin
+joao@tripmate.com / 123456 — Admin de Viagem
+ana@tripmate.com / 123456 — Membro
