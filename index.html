@@ -204,6 +204,65 @@ table tbody tr:hover td{background:#F7F9FF}
   .conteudo{padding:20px 14px}
   .dh-nome{font-size:1.5rem}
 }
+
+/* ── DESKTOP ── */
+@media(min-width:900px){
+  /* Login: painel lateral */
+  #tela-login{align-items:stretch;justify-content:flex-end}
+  .confetes{display:block}
+  .login-painel{
+    display:flex!important;
+    flex-direction:column;justify-content:center;
+    flex:1;padding:60px;color:#fff;
+  }
+  .login-painel-titulo{
+    font-size:3rem;font-weight:900;line-height:1.1;margin-bottom:16px;
+  }
+  .login-painel-sub{font-size:1.1rem;opacity:.85;line-height:1.6;max-width:440px}
+  .login-painel-items{margin-top:36px;display:flex;flex-direction:column;gap:16px}
+  .login-painel-item{display:flex;align-items:center;gap:14px;font-size:1rem;opacity:.9}
+  .login-painel-icone{
+    width:44px;height:44px;border-radius:12px;
+    background:rgba(255,255,255,.15);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.3rem;flex-shrink:0;
+  }
+  .login-box{
+    width:440px;min-width:440px;border-radius:0;
+    min-height:100vh;display:flex;flex-direction:column;
+    justify-content:center;padding:60px 52px;
+    box-shadow:-20px 0 60px rgba(0,0,0,.2);
+  }
+  .login-logo{justify-content:flex-start;font-size:1.8rem}
+  .login-sub{text-align:left;margin-bottom:32px}
+
+  /* viagens vazias: hero desktop */
+  .vazio-desktop{
+    display:flex!important;
+    flex-direction:column;align-items:center;justify-content:center;
+    min-height:420px;text-align:center;
+  }
+  .vazio-desktop .vd-icone{font-size:5rem;margin-bottom:20px;opacity:.5}
+  .vazio-desktop .vd-titulo{font-size:1.6rem;font-weight:800;color:var(--azul);margin-bottom:8px}
+  .vazio-desktop .vd-sub{color:var(--muted);font-size:1rem;margin-bottom:28px;max-width:400px}
+
+  /* grid viagens desktop: min 340px */
+  .grid-viagens{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+
+  /* detalhe: header maior */
+  .detalhe-header{min-height:240px}
+  .dh-nome{font-size:2.4rem}
+
+  /* tabs desktop: mais espaçadas */
+  .tab{padding:11px 20px;font-size:.88rem}
+
+  /* cards com mais padding */
+  .card{padding:28px 32px}
+
+  /* header mais alto */
+  #app-header{height:68px}
+  .logo{font-size:1.6rem}
+}
 </style>
 </head>
 <body>
@@ -211,6 +270,17 @@ table tbody tr:hover td{background:#F7F9FF}
 
 <div id="tela-login" class="tela ativa">
   <div class="confetes" id="confetes"></div>
+  <!-- painel esquerdo: so aparece no desktop via CSS -->
+  <div class="login-painel" style="display:none">
+    <div class="login-painel-titulo">Organize sua<br/>proxima viagem.</div>
+    <div class="login-painel-sub">Voos, hospedagem, passeios, orcamento e checklist — tudo em um lugar so, compartilhado com sua familia ou grupo.</div>
+    <div class="login-painel-items">
+      <div class="login-painel-item"><div class="login-painel-icone">&#9992;</div><span>Voos e hospedagem centralizados</span></div>
+      <div class="login-painel-item"><div class="login-painel-icone">&#128176;</div><span>Orcamento compartilhado em tempo real</span></div>
+      <div class="login-painel-item"><div class="login-painel-icone">&#128101;</div><span>Cada pessoa ve so as viagens dela</span></div>
+      <div class="login-painel-item"><div class="login-painel-icone">&#10003;</div><span>Checklist de tarefas para nao esquecer nada</span></div>
+    </div>
+  </div>
   <div class="login-box">
     <div class="login-logo">&#128506;&#65039; TripMate</div>
     <div class="login-sub">Organize suas viagens em grupo</div>
@@ -221,11 +291,9 @@ table tbody tr:hover td{background:#F7F9FF}
     <input class="campo-input" id="ls" type="password" value="admin123"/>
     <button class="btn-entrar" onclick="fazerLogin()">Entrar</button>
     <button class="btn-entrar" onclick="abrirModal('m-cadastro')" style="background:transparent;border:2px solid var(--azul);color:var(--azul);margin-top:12px;box-shadow:none">Criar conta</button>
-    <div class="login-dica">
-      <strong>Contas de teste</strong><br/>
-      sysadmin@tripmate.com / admin123 &mdash; SysAdmin<br/>
-      joao@tripmate.com / 123456 &mdash; Admin de Viagem<br/>
-      ana@tripmate.com / 123456 &mdash; Membro
+    <div class="login-dica" style="font-size:.78rem;color:var(--muted)">
+      Primeira vez? Clique em <strong>Criar conta</strong> para se cadastrar.<br/>
+      Um administrador podera ajustar seu perfil depois.
     </div>
   </div>
 </div>
@@ -554,7 +622,7 @@ table tbody tr:hover td{background:#F7F9FF}
 //  CONFIGURE AQUI
 // ══════════════════════════════════════════
 var SUPABASE_URL  = 'https://hsuvzlpgzfhfxtjugztz.supabase.co';
-var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzdXZ6bHBnemZoZnh0anVnenR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjYxNjksImV4cCI6MjA5Njk0MjE2OX0.91kI4Xfke__pJPDoMJNnY-u5HJxf65GIr88GMQnUHP0';
+var SUPABASE_ANON = 'SUA_ANON_KEY';
 var BUCKET_CAPAS  = 'capas-viagens';
 // ══════════════════════════════════════════
 
@@ -758,8 +826,19 @@ function renderViagens(){
 function _renderGrid(viagens, parts){
   var g=gi('grid-viagens'); g.innerHTML='';
   if(!viagens.length){
-    var div=document.createElement('div'); div.className='vazio';
-    div.innerHTML='<div class="vazio-icone">&#128506;</div>Nenhuma viagem ainda. Crie a primeira!';
+    var isDesktop = window.innerWidth >= 900;
+    var div=document.createElement('div');
+    if(isDesktop){
+      div.className='vazio-desktop';
+      div.innerHTML=
+        '<div class="vd-icone">&#128506;&#65039;</div>'+
+        '<div class="vd-titulo">Nenhuma viagem ainda</div>'+
+        '<div class="vd-sub">Crie sua primeira viagem e comece a organizar voos, hospedagem, passeios e muito mais.</div>'+
+        '<button class="btn-add laranja" style="font-size:1rem;padding:14px 32px" onclick="abrirModalNovaViagem()">+ Criar primeira viagem</button>';
+    } else {
+      div.className='vazio';
+      div.innerHTML='<div class="vazio-icone">&#128506;</div>Nenhuma viagem ainda. Crie a primeira!';
+    }
     g.appendChild(div); return;
   }
   viagens.forEach(function(v){
