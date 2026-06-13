@@ -220,6 +220,1310 @@ table tbody tr:hover td{background:#F7F9FF}
     <label class="campo-label">Senha</label>
     <input class="campo-input" id="ls" type="password" value="admin123"/>
     <button class="btn-entrar" onclick="fazerLogin()">Entrar</button>
+    <button class="btn-entrar" onclick="abrirModal('m-cadastro')" style="background:transparent;border:2px solid var(--azul);color:var(--azul);margin-top:12px;box-shadow:none">Criar conta</button>
+    <div class="login-dica">
+      <strong>Contas de teste</strong><br/>
+      sysadmin@tripmate.com / admin123 &mdash; SysAdmin<br/>
+      joao@tripmate.com / 123456 &mdash; Admin de Viagem<br/>
+      ana@tripmate.com / 123456 &mdash; Membro
+    </div>
+  </div>
+</div>
+
+<div id="tela-app" class="tela">
+<header id="app-header">
+  <div class="logo" onclick="irPara('viagens')">&#128506;&#65039; TripMate</div>
+  <div class="nav-user">
+    <span class="nav-nome" id="hn"></span>
+    <span class="badge-papel" id="hb"></span>
+    <button class="btn-header" id="btn-nav-sys" style="display:none" onclick="irPara('usuarios')">&#128101; Usuarios</button>
+    <button class="btn-header" onclick="sair()">Sair</button>
+  </div>
+</header>
+
+<div id="tela-viagens" class="tela ativa">
+  <div class="conteudo">
+    <div class="banner-mock">&#128230; Modo local &mdash; dados salvos no navegador.</div>
+    <div class="flex" style="margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h1 style="font-size:1.9rem;font-weight:900;color:var(--azul)">Minhas viagens</h1>
+        <p style="color:var(--muted);font-size:.875rem;margin-top:2px">Clique em uma viagem para ver os detalhes</p>
+      </div>
+      <div class="ml-auto">
+        <button class="btn-add laranja" onclick="abrirModalNovaViagem()">+ Nova viagem</button>
+      </div>
+    </div>
+    <div class="grid-viagens" id="grid-viagens"></div>
+  </div>
+</div>
+
+<div id="tela-detalhe" class="tela">
+  <div class="conteudo">
+    <div class="detalhe-header">
+      <div class="dh-bg" id="dh-bg"><img id="dh-img" src="" style="display:none"/></div>
+      <div class="dh-overlay"></div>
+      <div class="dh-body">
+        <div>
+          <div class="dh-eyebrow">Viagem</div>
+          <div class="dh-nome" id="dh-nome"></div>
+          <div class="dh-dest" id="dh-dest"></div>
+          <div class="dh-datas" id="dh-datas"></div>
+        </div>
+        <div class="dh-acoes">
+          <button class="btn-dh am" id="btn-upload-capa" onclick="document.getElementById('inp-capa').click()">&#128247; Imagem</button>
+          <input type="file" id="inp-capa" accept="image/*" style="display:none" onchange="uploadCapa(this)"/>
+          <button class="btn-dh" onclick="abrirModal('m-print')">&#128424; Imprimir</button>
+          <button class="btn-dh" onclick="irPara('viagens')">&larr; Voltar</button>
+        </div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab ativa" data-cor="laranja" onclick="ativarTab('voos',this)">&#9992; Voos</button>
+      <button class="tab" data-cor="verde"   onclick="ativarTab('hospedagem',this)">&#127968; Hospedagem</button>
+      <button class="tab" data-cor="roxo"    onclick="ativarTab('parques',this)">&#127914; Passeios</button>
+      <button class="tab" data-cor="azul"    onclick="ativarTab('orcamento',this)">&#128176; Orcamento</button>
+      <button class="tab" data-cor="amarelo" onclick="ativarTab('checklist',this)">&#10003; Checklist</button>
+      <button class="tab" data-cor="muted"   onclick="ativarTab('participantes',this)">&#128101; Participantes</button>
+    </div>
+    <div id="tab-voos" class="tab-conteudo ativo"><div class="card">
+      <div class="secao-toolbar"><div class="card-titulo">&#9992; Voos</div>
+        <button class="btn-add laranja" onclick="abrirModal('m-voo')">+ Adicionar voo</button></div>
+      <div class="tabela-wrap"><table><thead><tr>
+        <th>Companhia</th><th>No.</th><th>Trecho</th><th>Partida</th><th>Chegada</th>
+        <th>Localizador</th><th>Valor</th><th>Passageiros</th><th></th>
+      </tr></thead><tbody id="tb-voos"></tbody></table></div>
+    </div></div>
+    <div id="tab-hospedagem" class="tab-conteudo"><div class="card">
+      <div class="secao-toolbar"><div class="card-titulo">&#127968; Hospedagem</div>
+        <button class="btn-add verde" onclick="abrirModal('m-hosp')">+ Adicionar</button></div>
+      <div class="tabela-wrap"><table><thead><tr>
+        <th>Local</th><th>Endereco</th><th>Check-in</th><th>Check-out</th>
+        <th>Localizador</th><th>Valor</th><th>Obs</th><th></th>
+      </tr></thead><tbody id="tb-hosp"></tbody></table></div>
+    </div></div>
+    <div id="tab-parques" class="tab-conteudo"><div class="card">
+      <div class="secao-toolbar"><div class="card-titulo">&#127914; Passeios e Ingressos</div>
+        <button class="btn-add roxo" onclick="abrirModal('m-parque')">+ Adicionar</button></div>
+      <div class="tabela-wrap"><table><thead><tr>
+        <th>Local / Atracao</th><th>Data</th><th>Tipo</th><th>Qtd</th><th>Valor</th><th>Obs</th><th></th>
+      </tr></thead><tbody id="tb-parques"></tbody></table></div>
+    </div></div>
+    <div id="tab-orcamento" class="tab-conteudo">
+      <div class="card"><div class="orc-cards" id="orc-cards"></div></div>
+      <div class="card">
+        <div class="secao-toolbar"><div class="card-titulo">&#128279; Vinculadas (voos, hotel, passeios)</div></div>
+        <p class="card-sub">Geradas automaticamente. Para remover, exclua o item de origem.</p>
+        <div class="tabela-wrap"><table><thead><tr>
+          <th>Descricao</th><th>Categoria</th><th>Data</th><th>Valor</th><th></th>
+        </tr></thead><tbody id="tb-desp-auto"></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="secao-toolbar">
+          <div class="card-titulo">&#128203; Gastos avulsos</div>
+          <button class="btn-add azul" onclick="abrirModal('m-despesa')">+ Adicionar gasto</button>
+        </div>
+        <p class="card-sub">Seguro, aluguel de carro, chip, compras e qualquer outro gasto livre.</p>
+        <div class="tabela-wrap"><table><thead><tr>
+          <th>Descricao</th><th>Categoria</th><th>Data</th><th>Pago por</th><th>Obs</th><th>Valor</th><th></th>
+        </tr></thead><tbody id="tb-desp-livre"></tbody></table></div>
+      </div>
+    </div>
+    <div id="tab-checklist" class="tab-conteudo"><div class="card">
+      <div class="secao-toolbar"><div class="card-titulo">&#10003; Lista de tarefas</div>
+        <button class="btn-add amarelo" style="color:var(--azul)" onclick="abrirModal('m-item')">+ Adicionar item</button></div>
+      <div id="lista-check"></div>
+    </div></div>
+    <div id="tab-participantes" class="tab-conteudo"><div class="card">
+      <div class="secao-toolbar"><div class="card-titulo">&#128101; Participantes</div>
+        <button class="btn-add azul" id="btn-add-part" onclick="abrirModalPart()">+ Adicionar</button></div>
+      <div class="part-grid" id="part-grid"></div>
+    </div></div>
+  </div>
+</div>
+
+<div id="tela-usuarios" class="tela">
+  <div class="conteudo">
+    <div class="flex" style="margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h1 style="font-size:1.9rem;font-weight:900;color:var(--azul)">Usuarios</h1>
+        <p style="color:var(--muted);font-size:.875rem;margin-top:2px">Gerencie os acessos</p>
+      </div>
+      <div class="ml-auto flex" style="gap:10px">
+        <button class="btn-add verde" onclick="abrirModal('m-usuario')">+ Novo usuario</button>
+        <button class="btn-cancel" style="border-radius:10px" onclick="irPara('viagens')">&larr; Voltar</button>
+      </div>
+    </div>
+    <div class="card"><div id="lista-usuarios"></div></div>
+  </div>
+</div>
+</div>
+
+<!-- MODAIS -->
+<div class="modal-bg" id="m-viagem"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-viagem')">&#215;</button>
+  <h3>Nova viagem</h3>
+  <div class="fg">
+    <div class="fr full"><label>Nome da viagem *</label><input id="vn" placeholder="Ex: Ferias na Europa 2026"/></div>
+    <div class="fr full"><label>Destino *</label><input id="vd" placeholder="Ex: Paris, Roma e Lisboa"/></div>
+    <div class="fr"><label>Data de ida</label><input id="vi" type="date"/></div>
+    <div class="fr"><label>Data de volta</label><input id="vv" type="date"/></div>
+    <div class="fr full"><label>Observacoes</label><textarea id="vo" placeholder="Notas gerais..."></textarea></div>
+    <div class="fr full">
+      <label>Imagem de capa (opcional)</label>
+      <div class="upload-area" onclick="document.getElementById('inp-capa-novo').click()">
+        <div style="font-size:2rem">&#128444;</div>
+        <div style="color:var(--muted);font-size:.85rem;margin-top:6px">Clique para selecionar</div>
+        <img id="prev-capa" class="upload-prev"/>
+      </div>
+      <input type="file" id="inp-capa-novo" accept="image/*" style="display:none" onchange="previewCapa(this)"/>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarViagem()">Criar viagem</button>
+    <button class="btn-cancel" onclick="fecharModal('m-viagem')">Cancelar</button>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-voo"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-voo')">&#215;</button>
+  <h3>Adicionar voo</h3>
+  <div class="fg">
+    <div class="fr"><label>Companhia</label><input id="fc" placeholder="LATAM, Gol..."/></div>
+    <div class="fr"><label>No. do voo</label><input id="fn" placeholder="LA8023"/></div>
+    <div class="fr"><label>Origem</label><input id="fo" placeholder="GRU - Sao Paulo"/></div>
+    <div class="fr"><label>Destino</label><input id="fd" placeholder="CDG - Paris"/></div>
+    <div class="fr"><label>Partida</label><input id="fp" type="datetime-local"/></div>
+    <div class="fr"><label>Chegada</label><input id="fch" type="datetime-local"/></div>
+    <div class="fr"><label>Localizador</label><input id="fl" placeholder="ABC123"/></div>
+    <div class="fr"><label>Valor (R$)</label><input id="fv" type="number" min="0" placeholder="0"/></div>
+    <div class="fr full"><label>Passageiros</label><input id="fps" placeholder="Quem viaja neste voo?"/></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarVoo()">Salvar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-voo')">Cancelar</button>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-hosp"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-hosp')">&#215;</button>
+  <h3>Adicionar hospedagem</h3>
+  <div class="fg">
+    <div class="fr full"><label>Nome do local</label><input id="hn2" placeholder="Hotel, Airbnb..."/></div>
+    <div class="fr full"><label>Endereco</label><input id="he" placeholder="Rua, cidade, pais"/></div>
+    <div class="fr"><label>Check-in</label><input id="hci" type="date"/></div>
+    <div class="fr"><label>Check-out</label><input id="hco" type="date"/></div>
+    <div class="fr"><label>Localizador</label><input id="hl" placeholder="Booking #..."/></div>
+    <div class="fr"><label>Valor (R$)</label><input id="hv" type="number" min="0" placeholder="0"/></div>
+    <div class="fr full"><label>Observacoes</label><textarea id="ho" placeholder="Cafe incluso..."></textarea></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarHosp()">Salvar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-hosp')">Cancelar</button>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-parque"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-parque')">&#215;</button>
+  <h3>Adicionar passeio / ingresso</h3>
+  <div class="fg">
+    <div class="fr full"><label>Local / Atracao *</label><input id="pn" placeholder="Torre Eiffel..."/></div>
+    <div class="fr"><label>Data</label><input id="pd" type="date"/></div>
+    <div class="fr"><label>Tipo</label><input id="pt" placeholder="Ingresso, excursao..."/></div>
+    <div class="fr"><label>Quantidade</label><input id="pq" type="number" value="1" min="1"/></div>
+    <div class="fr"><label>Valor total (R$)</label><input id="pv" type="number" min="0" placeholder="0"/></div>
+    <div class="fr full"><label>Observacoes</label><input id="po" placeholder="Ponto de encontro..."/></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarParque()">Salvar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-parque')">Cancelar</button>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-despesa"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-despesa')">&#215;</button>
+  <h3>Gasto avulso</h3>
+  <p style="color:var(--muted);font-size:.82rem;margin-bottom:16px;margin-top:-10px">Seguro, aluguel de carro, chip, compras e qualquer outro gasto livre.</p>
+  <div class="fg">
+    <div class="fr full"><label>Descricao *</label><input id="dd" placeholder="Ex: Seguro saude, aluguel de carro..."/></div>
+    <div class="fr"><label>Categoria</label>
+      <select id="dc">
+        <option value="">-- selecione --</option>
+        <option value="Seguro saude / viagem">Seguro saude / viagem</option>
+        <option value="Aluguel de carro">Aluguel de carro</option>
+        <option value="Chip / Internet">Chip / Internet</option>
+        <option value="Alimentacao">Alimentacao</option>
+        <option value="Transporte">Transporte</option>
+        <option value="Compras">Compras</option>
+        <option value="Farmacia">Farmacia</option>
+        <option value="Camera / Equipamento">Camera / Equipamento</option>
+        <option value="Gorjeta">Gorjeta</option>
+        <option value="Outros">Outros</option>
+      </select>
+    </div>
+    <div class="fr"><label>Data</label><input id="ddt" type="date"/></div>
+    <div class="fr"><label>Pago por</label><input id="dp" placeholder="Nome de quem pagou"/></div>
+    <div class="fr"><label>Valor (R$) *</label><input id="dv" type="number" min="0" placeholder="0"/></div>
+    <div class="fr full"><label>Observacoes</label><input id="dobs" placeholder="Detalhes opcionais..."/></div>
+  </div>
+
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarDespesa()">Salvar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-despesa')">Cancelar</button>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-item"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-item')">&#215;</button>
+  <h3>Novo item da lista</h3>
+  <div class="fg">
+    <div class="fr full"><label>Descricao *</label><input id="ii" placeholder="Tirar visto, comprar adaptador..."/></div>
+    <div class="fr full"><label>Responsavel</label><input id="ir" placeholder="Quem vai cuidar disso?"/></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarItem()">Salvar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-item')">Cancelar</button>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-part"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-part')">&#215;</button>
+  <h3>Adicionar participante</h3>
+  <div class="fr" style="margin-bottom:12px"><label>Usuario</label><select id="part-sel"></select></div>
+  <div class="fr" style="margin-bottom:16px"><label>Papel nesta viagem</label>
+    <select id="part-role">
+      <option value="MEMBRO">Membro</option>
+      <option value="TRIP_ADMIN">Admin da viagem</option>
+    </select>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarPart()">Adicionar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-part')">Cancelar</button>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-usuario"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-usuario')">&#215;</button>
+  <h3>Novo usuario</h3>
+  <div class="fg">
+    <div class="fr full"><label>Nome completo *</label><input id="un" placeholder="Maria da Silva"/></div>
+    <div class="fr full"><label>E-mail *</label><input id="ue" type="email" placeholder="maria@email.com"/></div>
+    <div class="fr"><label>Senha *</label><input id="us" type="password" placeholder="minimo 6 chars"/></div>
+    <div class="fr"><label>Perfil</label>
+      <select id="up"><option value="MEMBRO">Membro</option><option value="SYSADMIN">SysAdmin</option></select>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarUsuario()">Criar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-usuario')">Cancelar</button>
+  </div>
+</div></div>
+
+<!-- MODAL IMPRESSAO -->
+<div class="modal-bg" id="m-print"><div class="modal" style="max-width:380px">
+  <button class="modal-x" onclick="fecharModal('m-print')">&#215;</button>
+  <h3>&#128424; O que imprimir?</h3>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px">
+    <button class="btn-ok" style="text-align:left;padding:14px 18px;border-radius:12px;font-size:.95rem" onclick="imprimir('tudo')">&#128196; Tudo</button>
+    <button class="btn-ok" style="text-align:left;padding:14px 18px;border-radius:12px;font-size:.95rem;background:var(--laranja)" onclick="imprimir('voos')">&#9992; Voos</button>
+    <button class="btn-ok" style="text-align:left;padding:14px 18px;border-radius:12px;font-size:.95rem;background:var(--verde)" onclick="imprimir('hospedagem')">&#127968; Hospedagem</button>
+    <button class="btn-ok" style="text-align:left;padding:14px 18px;border-radius:12px;font-size:.95rem;background:var(--roxo)" onclick="imprimir('passeios')">&#127914; Passeios</button>
+    <button class="btn-ok" style="text-align:left;padding:14px 18px;border-radius:12px;font-size:.95rem;background:var(--azul2)" onclick="imprimir('orcamento')">&#128176; Orcamento</button>
+    <button class="btn-ok" style="text-align:left;padding:14px 18px;border-radius:12px;font-size:.95rem;background:#D97706" onclick="imprimir('checklist')">&#10003; Checklist (pendencias)</button>
+  </div>
+  <button class="btn-cancel" onclick="fecharModal('m-print')" style="width:100%;margin-top:4px">Cancelar</button>
+</div></div>
+
+<!-- MODAL CADASTRO -->
+<div class="modal-bg" id="m-cadastro"><div class="modal" style="max-width:420px">
+  <button class="modal-x" onclick="fecharModal('m-cadastro')">&#215;</button>
+  <h3>&#128100; Criar conta</h3>
+  <p style="color:var(--muted);font-size:.82rem;margin-bottom:16px;margin-top:-10px">Crie seu acesso. Um administrador podera ajustar seu perfil depois.</p>
+  <div class="fg">
+    <div class="fr full"><label>Nome completo *</label><input id="cn" placeholder="Seu nome"/></div>
+    <div class="fr full"><label>E-mail *</label><input id="ce" type="email" placeholder="seu@email.com"/></div>
+    <div class="fr full"><label>Senha *</label><input id="cs" type="password" placeholder="minimo 6 caracteres"/></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="criarConta()">Criar conta</button>
+    <button class="btn-cancel" onclick="fecharModal('m-cadastro')">Cancelar</button>
+  </div>
+</div></div>
+
+<script>
+var CHAVE = 'tripmate_v4';
+var CORES = ['#1A3A8F','#F97316','#0FAB7A','#7C3AED','#D97706','#EF4444','#2952CC','#0891B2'];
+
+var PADRAO = {
+  usuarios:[
+    {id:'u1',nome:'Junior SysAdmin',email:'sysadmin@tripmate.com',senha:'admin123',papel:'SYSADMIN'},
+    {id:'u2',nome:'Joao Organizador',email:'joao@tripmate.com',   senha:'123456',  papel:'MEMBRO'},
+    {id:'u3',nome:'Ana Lima',        email:'ana@tripmate.com',    senha:'123456',  papel:'MEMBRO'},
+    {id:'u4',nome:'Paula Ramos',     email:'paula@tripmate.com',  senha:'123456',  papel:'MEMBRO'},
+    {id:'u5',nome:'Bruno Ramos',     email:'bruno@tripmate.com',  senha:'123456',  papel:'MEMBRO'}
+  ],
+  viagens:[
+    {id:'v1',nome:'Europa 2026',destino:'Paris, Roma e Lisboa',ida:'2026-07-10',volta:'2026-07-28',
+     obs:'Primeira viagem internacional da familia!',capa:'',
+     participantes:[{uid:'u2',role:'TRIP_ADMIN'},{uid:'u3',role:'MEMBRO'},{uid:'u4',role:'MEMBRO'}],
+     voos:[{id:'f1',cia:'Air France',num:'AF456',orig:'GRU - Sao Paulo',dest:'CDG - Paris',
+            part:'2026-07-10T22:00',cheg:'2026-07-11T14:30',loc:'AF98XZ',val:6800,pass:'Familia toda'}],
+     hospedagem:[{id:'h1',nome:'Hotel Le Marais',end:'Rue de Bretagne 45, Paris',
+                  cin:'2026-07-11',cout:'2026-07-16',loc:'BK12345',val:4200,obs:'Cafe incluso'}],
+     parques:[{id:'p1',nome:'Torre Eiffel',data:'2026-07-12',tipo:'Acesso ao topo',qtd:4,val:520,obs:''}],
+     despesas:[
+       {id:'d1',desc:'Air France AF456 GRU - Sao Paulo - CDG - Paris',cat:'Voo',data:'2026-07-10',pago:'',val:6800,origem:'voo:f1'},
+       {id:'d2',desc:'Hotel Le Marais',cat:'Hospedagem',data:'2026-07-11',pago:'',val:4200,origem:'hosp:h1'},
+       {id:'d3',desc:'Torre Eiffel',cat:'Ingresso',data:'2026-07-12',pago:'',val:520,origem:'parque:p1'},
+       {id:'d4',desc:'Seguro viagem familia',cat:'Seguro saude / viagem',data:'2026-05-01',pago:'Joao',val:980,obs:'Seguradora XYZ'},
+       {id:'d5',desc:'Jantar La Boheme',cat:'Alimentacao',data:'2026-07-11',pago:'Ana',val:320,obs:''}
+     ],
+     checklist:[
+       {id:'c1',desc:'Renovar passaporte',resp:'Todos',ok:true},
+       {id:'c2',desc:'Solicitar visto Schengen',resp:'Joao',ok:true},
+       {id:'c3',desc:'Comprar adaptador de tomada',resp:'Ana',ok:false},
+       {id:'c4',desc:'Avisar o banco sobre a viagem',resp:'Todos',ok:false}
+     ]
+    },
+    {id:'v2',nome:'Praia Nordeste',destino:'Porto de Galinhas, PE',ida:'2026-01-15',volta:'2026-01-22',
+     obs:'Verao!',capa:'',
+     participantes:[{uid:'u4',role:'TRIP_ADMIN'},{uid:'u5',role:'MEMBRO'}],
+     voos:[{id:'f1',cia:'Gol',num:'G3-1234',orig:'CGH',dest:'REC',part:'2026-01-15T06:00',
+            cheg:'2026-01-15T09:30',loc:'GOL77',val:1600,pass:'3 pessoas'}],
+     hospedagem:[{id:'h1',nome:'Pousada Recanto',end:'Porto de Galinhas',
+                  cin:'2026-01-15',cout:'2026-01-22',loc:'PDG2026',val:2800,obs:'Cafe incluso'}],
+     parques:[],
+     despesas:[
+       {id:'d1',desc:'Gol G3-1234 CGH - REC',cat:'Voo',data:'2026-01-15',pago:'',val:1600,origem:'voo:f1'},
+       {id:'d2',desc:'Pousada Recanto',cat:'Hospedagem',data:'2026-01-15',pago:'',val:2800,origem:'hosp:h1'},
+       {id:'d3',desc:'Protetor solar e farmacia',cat:'Farmacia',data:'2026-01-14',pago:'Paula',val:180,obs:''}
+     ],
+     checklist:[
+       {id:'c1',desc:'Protetor solar FPS 50+',resp:'Todos',ok:false},
+       {id:'c2',desc:'Reservar passeio de buggy',resp:'Bruno',ok:false}
+     ]
+    }
+  ],
+  seq:{u:6,v:3,f:2,h:2,p:2,d:6,c:5}
+};
+
+function loadDB(){
+  try{
+    var s = localStorage.getItem(CHAVE);
+    return s ? JSON.parse(s) : JSON.parse(JSON.stringify(PADRAO));
+  } catch(e){ return JSON.parse(JSON.stringify(PADRAO)); }
+}
+function saveDB(){
+  try{ localStorage.setItem(CHAVE, JSON.stringify(DB)); }
+  catch(e){ toast('Armazenamento cheio','err'); }
+}
+
+var DB = loadDB();
+var ME = null;
+var VA = null;
+
+function gi(id){ return document.getElementById(id); }
+function gv(id){ var e = gi(id); return e ? e.value.trim() : ''; }
+function clr(ids){ ids.forEach(function(id){ var e=gi(id); if(e) e.value=''; }); }
+
+function fmt$(n){
+  return (n||0).toLocaleString('pt-BR',{minimumFractionDigits:2});
+}
+function fmtD(s){
+  if(!s) return '—';
+  var p = s.split('-');
+  if(p.length === 3) return p[2]+'/'+p[1]+'/'+p[0];
+  return s;
+}
+function fmtDT(s){
+  if(!s) return '—';
+  try{
+    var d = new Date(s);
+    return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  } catch(e){ return s; }
+}
+function ini(n){
+  return n.split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
+}
+function corAv(id){
+  return CORES[id.charCodeAt(id.length-1) % CORES.length];
+}
+function novoId(pre){
+  var n = DB.seq[pre]++;
+  return pre + n;
+}
+function meuRole(){
+  if(!VA || !ME) return null;
+  if(ME.papel === 'SYSADMIN') return 'SYSADMIN';
+  for(var i=0;i<VA.participantes.length;i++){
+    if(VA.participantes[i].uid === ME.id) return VA.participantes[i].role;
+  }
+  return null;
+}
+function podeGerenciar(){
+  var r = meuRole();
+  return r === 'SYSADMIN' || r === 'TRIP_ADMIN';
+}
+
+// ── CONFETES ──
+(function(){
+  var cores=['#F97316','#FACC15','#0FAB7A','#7C3AED','#2952CC','#F472B6','#EF4444'];
+  var c = gi('confetes');
+  for(var i=0;i<60;i++){
+    var el = document.createElement('div');
+    el.className = 'confete';
+    var w = Math.random()*8+4;
+    var h = w*(Math.random()*.6+.4);
+    el.style.width  = w+'px';
+    el.style.height = h+'px';
+    el.style.left   = (Math.random()*100)+'%';
+    el.style.background = cores[i % cores.length];
+    el.style.opacity = (Math.random()*.7+.3).toString();
+    el.style.animationDuration  = (4+Math.random()*6)+'s';
+    el.style.animationDelay     = (Math.random()*6)+'s';
+    c.appendChild(el);
+  }
+})();
+
+// ── AUTH ──
+function fazerLogin(){
+  var email = gv('le');
+  var senha = gi('ls').value;
+  var u = null;
+  for(var i=0;i<DB.usuarios.length;i++){
+    if(DB.usuarios[i].email === email && DB.usuarios[i].senha === senha){ u = DB.usuarios[i]; break; }
+  }
+  if(!u){
+    var e = gi('login-erro');
+    e.textContent = 'E-mail ou senha incorretos.';
+    e.style.display = 'block';
+    return;
+  }
+  gi('login-erro').style.display = 'none';
+  ME = u;
+  gi('hn').textContent = u.nome;
+  gi('hb').textContent = u.papel === 'SYSADMIN' ? 'SYSADMIN' : 'MEMBRO';
+  gi('hb').className   = 'badge-papel ' + (u.papel === 'SYSADMIN' ? 'bp-sysadmin' : 'bp-membro');
+  gi('btn-nav-sys').style.display = u.papel === 'SYSADMIN' ? '' : 'none';
+  gi('tela-login').style.display = 'none';
+  gi('tela-app').style.display = 'block';
+  irPara('viagens');
+  toast('Ola, ' + u.nome + '!', 'ok');
+}
+gi('ls').addEventListener('keydown', function(e){ if(e.key==='Enter') fazerLogin(); });
+
+function sair(){
+  ME = null; VA = null;
+  gi('tela-login').style.display = 'flex';
+  gi('tela-app').style.display = 'none';
+  gi('ls').value = '';
+}
+
+// ── NAVEGAÇÃO ──
+function irPara(t){
+  var telas = document.querySelectorAll('#tela-app .tela');
+  for(var i=0;i<telas.length;i++) telas[i].classList.remove('ativa');
+  gi('tela-'+t).classList.add('ativa');
+  if(t === 'viagens')  renderViagens();
+  if(t === 'usuarios') renderUsuarios();
+}
+function ativarTab(nome, btn){
+  var tabs = document.querySelectorAll('.tab');
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('ativa');
+  btn.classList.add('ativa');
+  var conts = document.querySelectorAll('.tab-conteudo');
+  for(var i=0;i<conts.length;i++) conts[i].classList.remove('ativo');
+  gi('tab-'+nome).classList.add('ativo');
+  if(nome === 'orcamento') renderOrc();
+}
+function abrirModal(id){ gi(id).classList.add('aberto'); }
+function fecharModal(id){ gi(id).classList.remove('aberto'); }
+document.querySelectorAll('.modal-bg').forEach(function(m){
+  m.addEventListener('click', function(e){ if(e.target===m) m.classList.remove('aberto'); });
+});
+
+// ── CAPA ──
+var _capaB64 = '';
+function previewCapa(inp){
+  var f = inp.files[0]; if(!f) return;
+  var r = new FileReader();
+  r.onload = function(e){
+    _capaB64 = e.target.result;
+    var p = gi('prev-capa');
+    p.src = _capaB64;
+    p.style.display = 'block';
+  };
+  r.readAsDataURL(f);
+}
+function uploadCapa(inp){
+  var f = inp.files[0]; if(!f || !VA) return;
+  var r = new FileReader();
+  r.onload = function(e){
+    VA.capa = e.target.result;
+    saveDB();
+    aplicarCapa();
+    toast('Imagem atualizada', 'ok');
+  };
+  r.readAsDataURL(f);
+}
+function aplicarCapa(){
+  var img = gi('dh-img');
+  if(VA && VA.capa){ img.src = VA.capa; img.style.display = 'block'; }
+  else { img.src = ''; img.style.display = 'none'; }
+}
+
+// ── HELPER: criar TR ──
+function tr(celulas){
+  var row = document.createElement('tr');
+  celulas.forEach(function(c){
+    var td = document.createElement('td');
+    if(typeof c === 'string') td.innerHTML = c;
+    else if(c && c.nodeType) td.appendChild(c);
+    else td.textContent = c || '—';
+    row.appendChild(td);
+  });
+  return row;
+}
+function th_row(textos){
+  var row = document.createElement('tr');
+  textos.forEach(function(t){
+    var th = document.createElement('th');
+    th.textContent = t;
+    row.appendChild(th);
+  });
+  return row;
+}
+function btnDel(onclick_str){
+  var b = document.createElement('button');
+  b.className = 'btn-ico del';
+  b.innerHTML = '&#128465;';
+  b.setAttribute('onclick', onclick_str);
+  return b;
+}
+function vazioRow(cols, msg){
+  var row = document.createElement('tr');
+  var td  = document.createElement('td');
+  td.colSpan = cols;
+  td.className = 'vazio';
+  td.textContent = msg;
+  row.appendChild(td);
+  return row;
+}
+
+// ── VIAGENS ──
+function renderViagens(){
+  var minhas = DB.viagens.filter(function(v){
+    if(ME.papel === 'SYSADMIN') return true;
+    return v.participantes.some(function(p){ return p.uid === ME.id; });
+  });
+  var g = gi('grid-viagens');
+  g.innerHTML = '';
+  if(!minhas.length){
+    var div = document.createElement('div');
+    div.className = 'vazio';
+    div.innerHTML = '<div class="vazio-icone">&#128506;</div>Nenhuma viagem ainda. Crie a primeira!';
+    g.appendChild(div);
+    return;
+  }
+  minhas.forEach(function(v){
+    var total = v.participantes.length;
+    var meuP  = null;
+    for(var i=0;i<v.participantes.length;i++){
+      if(v.participantes[i].uid === ME.id){ meuP = v.participantes[i]; break; }
+    }
+    var role = ME.papel === 'SYSADMIN' ? 'SYSADMIN' : (meuP ? meuP.role : 'MEMBRO');
+    var lbls = {SYSADMIN:'SysAdmin', TRIP_ADMIN:'Admin da viagem', MEMBRO:'Membro'};
+    var lbl  = lbls[role] || role;
+    var hue  = v.id.charCodeAt(1) * 47 % 360;
+    var hue2 = (hue + 60) % 360;
+
+    var card = document.createElement('div');
+    card.className = 'viagem-card';
+    card.onclick = (function(vid){ return function(){ abrirViagem(vid); }; })(v.id);
+
+    var capa = document.createElement('div');
+    capa.className = 'vc-capa';
+    capa.style.background = 'linear-gradient(135deg,hsl('+hue+',60%,35%),hsl('+hue2+',55%,55%))';
+    if(v.capa){
+      var img = document.createElement('img');
+      img.src = v.capa;
+      capa.appendChild(img);
+    }
+    var overlay = document.createElement('div'); overlay.className = 'vc-overlay';
+    var pessoas = document.createElement('div'); pessoas.className = 'vc-pessoas';
+    pessoas.textContent = '&#128101; ' + total;
+    pessoas.innerHTML   = '&#128101; ' + total;
+    capa.appendChild(overlay);
+    capa.appendChild(pessoas);
+    card.appendChild(capa);
+
+    var body = document.createElement('div'); body.className = 'vc-body';
+    var nome = document.createElement('div'); nome.className = 'vc-nome'; nome.textContent = v.nome;
+    var dest = document.createElement('div'); dest.className = 'vc-dest'; dest.textContent = '&#128205; ' + v.destino; dest.innerHTML = '&#128205; ' + v.destino;
+    var datas= document.createElement('div'); datas.className= 'vc-datas';datas.textContent= fmtD(v.ida)+' → '+fmtD(v.volta);
+    var roleEl=document.createElement('span');roleEl.className='vc-role';roleEl.textContent=lbl;
+    body.appendChild(nome); body.appendChild(dest); body.appendChild(datas); body.appendChild(roleEl);
+    card.appendChild(body);
+    g.appendChild(card);
+  });
+}
+
+function abrirModalNovaViagem(){
+  _capaB64 = '';
+  gi('prev-capa').style.display = 'none';
+  abrirModal('m-viagem');
+}
+function salvarViagem(){
+  var nome = gv('vn'), dest = gv('vd');
+  if(!nome || !dest){ toast('Nome e destino sao obrigatorios','err'); return; }
+  var id = novoId('v');
+  DB.viagens.push({
+    id:id, nome:nome, destino:dest,
+    ida:gv('vi'), volta:gv('vv'), obs:gv('vo'),
+    capa:_capaB64||'',
+    participantes:[{uid:ME.id, role:'TRIP_ADMIN'}],
+    voos:[], hospedagem:[], parques:[], despesas:[], checklist:[]
+  });
+  saveDB();
+  fecharModal('m-viagem');
+  clr(['vn','vd','vi','vv','vo']);
+  _capaB64 = '';
+  renderViagens();
+  toast('Viagem criada!','ok');
+}
+
+// ── DETALHE ──
+function abrirViagem(id){
+  VA = null;
+  for(var i=0;i<DB.viagens.length;i++){
+    if(DB.viagens[i].id === id){ VA = DB.viagens[i]; break; }
+  }
+  if(!VA) return;
+  gi('dh-nome').textContent  = VA.nome;
+  gi('dh-dest').textContent  = '\uD83D\uDCCD ' + VA.destino;
+  gi('dh-datas').textContent = fmtD(VA.ida) + ' \u2192 ' + fmtD(VA.volta);
+  aplicarCapa();
+  gi('btn-upload-capa').style.display = podeGerenciar() ? '' : 'none';
+  gi('btn-add-part').style.display    = podeGerenciar() ? '' : 'none';
+  var tabs = document.querySelectorAll('.tab');
+  var conts= document.querySelectorAll('.tab-conteudo');
+  for(var i=0;i<tabs.length;i++)  tabs[i].classList.toggle('ativa', i===0);
+  for(var i=0;i<conts.length;i++) conts[i].classList.toggle('ativo', i===0);
+  renderVoos(); renderHosp(); renderParques(); renderOrc(); renderCheck(); renderPart();
+  irPara('detalhe');
+}
+
+// ── VOOS ──
+function renderVoos(){
+  var tb = gi('tb-voos');
+  tb.innerHTML = '';
+  if(!VA.voos.length){ tb.appendChild(vazioRow(9,'Nenhum voo cadastrado.')); return; }
+  VA.voos.forEach(function(r){
+    tb.appendChild(tr([
+      r.cia||'—', r.num||'—',
+      (r.orig||'—')+' \u2192 '+(r.dest||'—'),
+      fmtDT(r.part), fmtDT(r.cheg),
+      r.loc||'—',
+      'R$ '+fmt$(r.val),
+      r.pass||'—',
+      btnDel("del('voos','"+r.id+"',renderVoos)")
+    ]));
+  });
+}
+function salvarVoo(){
+  var fid = novoId('f');
+  var val = parseFloat(gv('fv'))||0;
+  var cia = gv('fc'), num = gv('fn'), orig = gv('fo'), dest = gv('fd');
+  VA.voos.push({id:fid,cia:cia,num:num,orig:orig,dest:dest,
+    part:gi('fp').value, cheg:gi('fch').value,
+    loc:gv('fl'), val:val, pass:gv('fps')});
+  if(val > 0){
+    var parts = [cia, num];
+    if(orig && dest) parts.push(orig+' - '+dest);
+    VA.despesas.push({id:novoId('d'), desc:parts.filter(Boolean).join(' '),
+      cat:'Voo', data:gi('fp').value ? gi('fp').value.slice(0,10) : '',
+      pago:'', val:val, obs:'', origem:'voo:'+fid});
+  }
+  saveDB();
+  fecharModal('m-voo');
+  clr(['fc','fn','fo','fd','fp','fch','fl','fv','fps']);
+  renderVoos(); renderDespesas();
+  toast('Voo adicionado','ok');
+}
+
+// ── HOSPEDAGEM ──
+function renderHosp(){
+  var tb = gi('tb-hosp');
+  tb.innerHTML = '';
+  if(!VA.hospedagem.length){ tb.appendChild(vazioRow(8,'Nenhuma hospedagem cadastrada.')); return; }
+  VA.hospedagem.forEach(function(r){
+    tb.appendChild(tr([
+      '<strong>'+(r.nome||'—')+'</strong>',
+      r.end||'—', fmtD(r.cin), fmtD(r.cout),
+      r.loc||'—', 'R$ '+fmt$(r.val), r.obs||'—',
+      btnDel("del('hospedagem','"+r.id+"',renderHosp)")
+    ]));
+  });
+}
+function salvarHosp(){
+  var hid = novoId('h');
+  var val = parseFloat(gv('hv'))||0;
+  var nome= gv('hn2');
+  VA.hospedagem.push({id:hid,nome:nome,end:gv('he'),cin:gv('hci'),
+    cout:gv('hco'),loc:gv('hl'),val:val,obs:gv('ho')});
+  if(val > 0){
+    VA.despesas.push({id:novoId('d'), desc:nome||'Hospedagem',
+      cat:'Hospedagem', data:gv('hci')||'',
+      pago:'', val:val, obs:'', origem:'hosp:'+hid});
+  }
+  saveDB();
+  fecharModal('m-hosp');
+  clr(['hn2','he','hci','hco','hl','hv','ho']);
+  renderHosp(); renderDespesas();
+  toast('Hospedagem adicionada','ok');
+}
+
+// ── PASSEIOS ──
+function renderParques(){
+  var tb = gi('tb-parques');
+  tb.innerHTML = '';
+  if(!VA.parques.length){ tb.appendChild(vazioRow(7,'Nenhum passeio cadastrado.')); return; }
+  VA.parques.forEach(function(r){
+    tb.appendChild(tr([
+      '<strong>'+(r.nome||'—')+'</strong>',
+      fmtD(r.data), r.tipo||'—', r.qtd||1,
+      'R$ '+fmt$(r.val), r.obs||'—',
+      btnDel("del('parques','"+r.id+"',renderParques)")
+    ]));
+  });
+}
+function salvarParque(){
+  var nome = gv('pn');
+  if(!nome){ toast('Nome e obrigatorio','err'); return; }
+  var pid = novoId('p');
+  var val = parseFloat(gv('pv'))||0;
+  VA.parques.push({id:pid,nome:nome,data:gv('pd'),tipo:gv('pt'),
+    qtd:parseInt(gi('pq').value)||1, val:val, obs:gv('po')});
+  if(val > 0){
+    VA.despesas.push({id:novoId('d'), desc:nome,
+      cat:'Ingresso', data:gv('pd')||'',
+      pago:'', val:val, obs:'', origem:'parque:'+pid});
+  }
+  saveDB();
+  fecharModal('m-parque');
+  clr(['pn','pd','pt','pv','po']);
+  gi('pq').value = '1';
+  renderParques(); renderDespesas();
+  toast('Passeio adicionado','ok');
+}
+
+// ── DESPESAS ──
+function renderDespesas(){
+  var auto  = VA.despesas.filter(function(r){ return !!r.origem; });
+  var livre = VA.despesas.filter(function(r){ return !r.origem; });
+
+  var ta = gi('tb-desp-auto');
+  ta.innerHTML = '';
+  if(!auto.length){
+    ta.appendChild(vazioRow(5,'Nenhuma ainda — adicione voos, hotel ou passeios com valor.'));
+  } else {
+    auto.forEach(function(r){
+      var lock = document.createElement('span');
+      lock.title = 'Exclua o item de origem para remover';
+      lock.style.color = 'var(--muted)';
+      lock.textContent = '🔒';
+      ta.appendChild(tr([r.desc, r.cat||'—', fmtD(r.data), 'R$ '+fmt$(r.val), lock]));
+    });
+  }
+
+  var tl = gi('tb-desp-livre');
+  tl.innerHTML = '';
+  if(!livre.length){
+    tl.appendChild(vazioRow(7,'Nenhum gasto avulso registrado ainda.'));
+  } else {
+    livre.forEach(function(r){
+      tl.appendChild(tr([
+        r.desc, r.cat||'—', fmtD(r.data),
+        r.pago||'—', r.obs||'—',
+        'R$ '+fmt$(r.val),
+        btnDel("del('despesas','"+r.id+"',function(){renderDespesas();renderOrc();})")
+      ]));
+    });
+  }
+}
+
+function renderOrc(){
+  renderDespesas();
+  var total      = VA.despesas.reduce(function(s,r){ return s+(r.val||0); },0);
+  var totalAuto  = VA.despesas.filter(function(r){ return  r.origem; }).reduce(function(s,r){ return s+(r.val||0); },0);
+  var totalLivre = VA.despesas.filter(function(r){ return !r.origem; }).reduce(function(s,r){ return s+(r.val||0); },0);
+  var cats = {};
+  VA.despesas.forEach(function(r){
+    var c = r.cat||'Outros';
+    cats[c] = (cats[c]||0)+(r.val||0);
+  });
+  var maior = null;
+  Object.keys(cats).forEach(function(k){
+    if(!maior || cats[k] > cats[maior]) maior = k;
+  });
+
+  var wrap = gi('orc-cards');
+  wrap.innerHTML = '';
+  var dados = [
+    {label:'Total geral',             val:'R$ '+fmt$(total),     dest:true},
+    {label:'Voos + Hotel + Passeios', val:'R$ '+fmt$(totalAuto), dest:false},
+    {label:'Gastos avulsos',          val:'R$ '+fmt$(totalLivre),dest:false},
+    {label:'Maior categoria',         val:maior||'—',            dest:false}
+  ];
+  dados.forEach(function(d){
+    var c = document.createElement('div');
+    c.className = 'orc-card' + (d.dest ? ' dest' : '');
+    var lbl = document.createElement('div'); lbl.className='orc-label'; lbl.textContent=d.label;
+    var val = document.createElement('div'); val.className='orc-val';   val.textContent=d.val;
+    if(!d.dest && d.label==='Maior categoria') val.style.fontSize='1.05rem';
+    c.appendChild(lbl); c.appendChild(val);
+    wrap.appendChild(c);
+  });
+}
+
+function salvarDespesa(){
+  var desc = gv('dd');
+  if(!desc){ toast('Descricao obrigatoria','err'); return; }
+  VA.despesas.push({
+    id:novoId('d'), desc:desc, cat:gv('dc')||'Outros',
+    data:gv('ddt'), pago:gv('dp'), val:parseFloat(gv('dv'))||0, obs:gv('dobs')||''
+  });
+  saveDB();
+  fecharModal('m-despesa');
+  clr(['dd','dc','ddt','dp','dv','dobs']);
+  renderDespesas(); renderOrc();
+  toast('Gasto adicionado','ok');
+}
+
+// ── CHECKLIST ──
+function renderCheck(){
+  var c = gi('lista-check');
+  c.innerHTML = '';
+  if(!VA.checklist.length){
+    var div = document.createElement('div'); div.className='vazio';
+    div.innerHTML = '<div class="vazio-icone">&#128203;</div>Lista vazia!';
+    c.appendChild(div); return;
+  }
+  VA.checklist.forEach(function(r){
+    var row = document.createElement('div');
+    row.className = 'checklist-item' + (r.ok ? ' concluido' : '');
+
+    var box = document.createElement('div');
+    box.className = 'check-box' + (r.ok ? ' marcado' : '');
+    box.textContent = r.ok ? '✓' : '';
+    box.onclick = (function(rid){ return function(){ toggleItem(rid); }; })(r.id);
+
+    var txt = document.createElement('span'); txt.className='check-texto'; txt.textContent=r.desc;
+    var resp= document.createElement('span'); resp.className='check-resp';  resp.textContent=r.resp||'';
+    var del = btnDel("del('checklist','"+r.id+"',renderCheck)");
+
+    row.appendChild(box); row.appendChild(txt); row.appendChild(resp); row.appendChild(del);
+    c.appendChild(row);
+  });
+}
+function toggleItem(id){
+  for(var i=0;i<VA.checklist.length;i++){
+    if(VA.checklist[i].id === id){ VA.checklist[i].ok = !VA.checklist[i].ok; break; }
+  }
+  saveDB(); renderCheck();
+}
+function salvarItem(){
+  var desc = gv('ii');
+  if(!desc){ toast('Descricao obrigatoria','err'); return; }
+  VA.checklist.push({id:novoId('c'), desc:desc, resp:gv('ir'), ok:false});
+  saveDB(); fecharModal('m-item'); clr(['ii','ir']); renderCheck();
+  toast('Item adicionado','ok');
+}
+
+// ── PARTICIPANTES ──
+function renderPart(){
+  var g = gi('part-grid');
+  g.innerHTML = '';
+  VA.participantes.forEach(function(p){
+    var u = null;
+    for(var i=0;i<DB.usuarios.length;i++){
+      if(DB.usuarios[i].id === p.uid){ u = DB.usuarios[i]; break; }
+    }
+    if(!u) return;
+    var lbls = {TRIP_ADMIN:'Admin da viagem', MEMBRO:'Membro', SYSADMIN:'SysAdmin'};
+    var chip = document.createElement('div'); chip.className='part-chip';
+    var av   = document.createElement('div'); av.className='part-av';
+    av.style.background = corAv(u.id);
+    av.textContent = ini(u.nome);
+    var info = document.createElement('div');
+    var nm = document.createElement('div'); nm.className='part-nome'; nm.textContent=u.nome;
+    var rl = document.createElement('div'); rl.className='part-role'; rl.textContent=lbls[p.role]||p.role;
+    info.appendChild(nm); info.appendChild(rl);
+    chip.appendChild(av); chip.appendChild(info);
+    if(podeGerenciar() && p.uid !== ME.id){
+      var rm = document.createElement('button'); rm.className='btn-rm'; rm.innerHTML='&times;';
+      rm.onclick = (function(uid){ return function(){ removerPart(uid); }; })(p.uid);
+      chip.appendChild(rm);
+    }
+    g.appendChild(chip);
+  });
+}
+function abrirModalPart(){
+  if(!podeGerenciar()){ toast('Sem permissao','err'); return; }
+  var jaEsta = VA.participantes.map(function(p){ return p.uid; });
+  var livres = DB.usuarios.filter(function(u){ return jaEsta.indexOf(u.id) === -1; });
+  var sel = gi('part-sel');
+  sel.innerHTML = '';
+  var opt0 = document.createElement('option'); opt0.value=''; opt0.textContent='— selecione —';
+  sel.appendChild(opt0);
+  livres.forEach(function(u){
+    var opt = document.createElement('option'); opt.value=u.id; opt.textContent=u.nome;
+    sel.appendChild(opt);
+  });
+  abrirModal('m-part');
+}
+function salvarPart(){
+  var uid  = gi('part-sel').value;
+  var role = gi('part-role').value;
+  if(!uid){ toast('Selecione um usuario','err'); return; }
+  VA.participantes.push({uid:uid, role:role});
+  saveDB(); fecharModal('m-part'); renderPart();
+  toast('Participante adicionado','ok');
+}
+function removerPart(uid){
+  if(!confirm('Remover este participante?')) return;
+  VA.participantes = VA.participantes.filter(function(p){ return p.uid !== uid; });
+  saveDB(); renderPart();
+  toast('Participante removido','info');
+}
+
+// ── DELETE ──
+function del(col, id, cb){
+  if(!confirm('Remover este item?')) return;
+  VA[col] = VA[col].filter(function(x){ return x.id !== id; });
+  var prefixos = {voos:'voo', hospedagem:'hosp', parques:'parque'};
+  if(prefixos[col]){
+    var chave = prefixos[col]+':'+id;
+    VA.despesas = VA.despesas.filter(function(d){ return d.origem !== chave; });
+  }
+  saveDB();
+  renderDespesas();
+  if(typeof cb === 'function') cb();
+  toast('Removido','info');
+}
+
+// ── USUARIOS ──
+function renderUsuarios(){
+  var lista = gi('lista-usuarios');
+  lista.innerHTML = '';
+  DB.usuarios.forEach(function(u){
+    var row = document.createElement('div'); row.className='u-row';
+    var av  = document.createElement('div'); av.className='u-av';
+    av.style.background = corAv(u.id);
+    av.textContent = ini(u.nome);
+    var info= document.createElement('div'); info.className='u-info';
+    var nm  = document.createElement('div'); nm.className='u-nome'; nm.textContent=u.nome;
+    var em  = document.createElement('div'); em.className='u-email'; em.textContent=u.email;
+    info.appendChild(nm); info.appendChild(em);
+    var bdg = document.createElement('span');
+    bdg.className = 'badge ' + (u.papel==='SYSADMIN' ? 'b-sys' : 'b-mem');
+    bdg.textContent = u.papel;
+    row.appendChild(av); row.appendChild(info); row.appendChild(bdg);
+    if(u.id !== ME.id){
+      var del2 = btnDel("delUsuario('"+u.id+"')");
+      row.appendChild(del2);
+    }
+    lista.appendChild(row);
+  });
+}
+function salvarUsuario(){
+  var nome  = gv('un'), email = gv('ue');
+  var senha = gi('us').value, papel = gv('up');
+  if(!nome||!email||!senha){ toast('Preencha todos os campos','err'); return; }
+  var existe = DB.usuarios.filter(function(u){ return u.email===email; });
+  if(existe.length){ toast('E-mail ja existe','err'); return; }
+  if(senha.length < 6){ toast('Senha deve ter pelo menos 6 caracteres','err'); return; }
+  DB.usuarios.push({id:novoId('u'), nome:nome, email:email, senha:senha, papel:papel});
+  saveDB(); fecharModal('m-usuario'); clr(['un','ue','us']);
+  renderUsuarios(); toast('Usuario criado','ok');
+}
+function delUsuario(id){
+  if(!confirm('Excluir este usuario?')) return;
+  DB.usuarios = DB.usuarios.filter(function(u){ return u.id !== id; });
+  saveDB(); renderUsuarios(); toast('Usuario removido','info');
+}
+
+// ── IMPRESSAO SELETIVA ──
+function imprimir(secao) {
+  fecharModal('m-print');
+  var estilos = document.createElement('style');
+  estilos.id = 'print-override';
+  estilos.innerHTML = '@media print { .tab-conteudo { display: none !important; } #print-alvo { display: block !important; } }';
+
+  // remove estilo anterior se existir
+  var anterior = document.getElementById('print-override');
+  if(anterior) anterior.parentNode.removeChild(anterior);
+
+  if(secao === 'tudo') {
+    window.print();
+    return;
+  }
+
+  // mapeia secao para o id da tab
+  var mapa = {
+    voos:       'tab-voos',
+    hospedagem: 'tab-hospedagem',
+    passeios:   'tab-parques',
+    orcamento:  'tab-orcamento',
+    checklist:  'tab-checklist'
+  };
+
+  var tabId = mapa[secao];
+  if(!tabId) { window.print(); return; }
+
+  // esconde todas as tabs, mostra so a escolhida
+  var conts = document.querySelectorAll('.tab-conteudo');
+  var estados = [];
+  for(var i=0;i<conts.length;i++){
+    estados.push(conts[i].style.display);
+    conts[i].style.display = 'none';
+  }
+  var alvo = gi(tabId);
+  if(alvo) alvo.style.display = 'block';
+
+  // aguarda render e imprime
+  setTimeout(function(){
+    window.print();
+    // restaura estado original
+    for(var i=0;i<conts.length;i++){
+      conts[i].style.display = estados[i];
+    }
+    // garante que a tab ativa continua visivel
+    var ativas = document.querySelectorAll('.tab-conteudo.ativo');
+    for(var i=0;i<ativas.length;i++) ativas[i].style.display = 'block';
+  }, 150);
+}
+
+// ── CRIAR CONTA ──
+function criarConta() {
+  var nome  = gv('cn');
+  var email = gv('ce');
+  var senha = gi('cs').value;
+  if(!nome || !email || !senha) { toast('Preencha todos os campos', 'err'); return; }
+  if(senha.length < 6) { toast('Senha deve ter pelo menos 6 caracteres', 'err'); return; }
+  var existe = false;
+  for(var i=0;i<DB.usuarios.length;i++){
+    if(DB.usuarios[i].email === email){ existe = true; break; }
+  }
+  if(existe) { toast('Este e-mail ja esta cadastrado', 'err'); return; }
+  DB.usuarios.push({id:novoId('u'), nome:nome, email:email, senha:senha, papel:'MEMBRO'});
+  saveDB();
+  fecharModal('m-cadastro');
+  clr(['cn','ce','cs']);
+  // preenche o login automaticamente
+  gi('le').value = email;
+  gi('ls').value = senha;
+  toast('Conta criada! Entre com suas credenciais.', 'ok');
+}
+
+// ── TOAST ──
+var _tt;
+function toast(msg, tipo){
+  tipo = tipo || 'ok';
+  var t = gi('toast');
+  t.textContent = msg;
+  t.className = 'show ' + tipo;
+  clearTimeout(_tt);
+  _tt = setTimeout(function(){ t.className = ''; }, 3500);
+}
+</script>
+</body>
+</html>
+  background:var(--bg);border-radius:10px;padding:10px 12px;line-height:1.7}
+.msg-erro{background:#FEE2E2;color:#991B1B;padding:10px 14px;
+  border-radius:8px;font-size:.85rem;margin-bottom:8px;display:none}
+#app-header{background:linear-gradient(90deg,var(--azul),var(--azul2));padding:0 28px;
+  height:62px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(26,58,143,.25)}
+.logo{font-size:1.4rem;font-weight:900;color:var(--amarelo);
+  display:flex;align-items:center;gap:8px;cursor:pointer;letter-spacing:-.5px}
+.nav-user{display:flex;align-items:center;gap:10px}
+.nav-nome{color:rgba(255,255,255,.85);font-size:.85rem;font-weight:500}
+.badge-papel{font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:20px}
+.bp-sysadmin{background:var(--amarelo);color:#3a2c00}
+.bp-membro{background:rgba(255,255,255,.2);color:#fff}
+.btn-header{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
+  color:#fff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:.8rem;font-family:inherit}
+.btn-header:hover{background:rgba(255,255,255,.22)}
+.conteudo{max-width:1080px;margin:0 auto;padding:32px 20px}
+.card{background:var(--branco);border-radius:var(--r);padding:24px;box-shadow:var(--sh);margin-bottom:22px}
+.card-titulo{font-size:1.1rem;font-weight:800;color:var(--azul);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-sub{font-size:.8rem;color:var(--muted);margin-bottom:14px;margin-top:-10px}
+.grid-viagens{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-bottom:28px}
+.viagem-card{background:var(--branco);border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--sh);cursor:pointer;transition:transform .15s,box-shadow .15s}
+.viagem-card:hover{transform:translateY(-5px);box-shadow:0 12px 36px rgba(26,58,143,.16)}
+.vc-capa{height:120px;position:relative;overflow:hidden}
+.vc-capa img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vc-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent)}
+.vc-pessoas{position:absolute;top:10px;right:10px;z-index:1;
+  background:rgba(255,255,255,.9);border-radius:20px;padding:3px 10px;
+  font-size:.72rem;font-weight:700;color:var(--azul)}
+.vc-body{padding:16px}
+.vc-nome{font-size:1.05rem;font-weight:800;color:var(--azul);margin-bottom:4px}
+.vc-dest{font-size:.85rem;font-weight:600;color:var(--laranja);margin-bottom:6px}
+.vc-datas{font-size:.78rem;color:var(--muted)}
+.vc-role{display:inline-block;margin-top:8px;font-size:.7rem;font-weight:700;
+  padding:2px 8px;border-radius:12px;background:var(--bg);color:var(--azul)}
+.detalhe-header{border-radius:var(--r);overflow:hidden;margin-bottom:22px;
+  box-shadow:var(--sh);position:relative;min-height:180px;
+  display:flex;flex-direction:column;justify-content:flex-end}
+.dh-bg{position:absolute;inset:0;background:linear-gradient(135deg,var(--azul) 0%,var(--azul2) 60%,var(--verde) 130%)}
+.dh-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.dh-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,20,60,.82) 0%,rgba(10,20,60,.3) 60%,transparent 100%)}
+.dh-body{position:relative;z-index:2;padding:28px;display:flex;align-items:flex-end;
+  justify-content:space-between;flex-wrap:wrap;gap:12px}
+.dh-eyebrow{font-size:.72rem;font-weight:700;color:var(--amarelo);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.dh-nome{font-size:2rem;font-weight:900;color:#fff;margin-bottom:4px;line-height:1.1}
+.dh-dest{font-size:1rem;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:4px}
+.dh-datas{font-size:.85rem;color:rgba(255,255,255,.65)}
+.dh-acoes{display:flex;gap:8px;flex-wrap:wrap}
+.btn-dh{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+  color:#fff;padding:8px 16px;border-radius:9px;cursor:pointer;font-size:.82rem;
+  font-family:inherit;font-weight:600;white-space:nowrap}
+.btn-dh:hover{background:rgba(255,255,255,.25)}
+.btn-dh.am{background:var(--amarelo);color:var(--azul);border-color:var(--amarelo)}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:20px;
+  background:var(--branco);border-radius:14px;padding:6px;box-shadow:var(--sh)}
+.tab{padding:9px 16px;border-radius:10px;border:none;background:transparent;
+  font-size:.83rem;font-weight:600;color:var(--muted);cursor:pointer;
+  transition:all .15s;white-space:nowrap;font-family:inherit}
+.tab.ativa{color:#fff}
+.tab[data-cor="laranja"].ativa{background:var(--laranja)}
+.tab[data-cor="verde"].ativa{background:var(--verde)}
+.tab[data-cor="roxo"].ativa{background:var(--roxo)}
+.tab[data-cor="azul"].ativa{background:var(--azul2)}
+.tab[data-cor="amarelo"].ativa{background:#D97706}
+.tab[data-cor="muted"].ativa{background:var(--azul)}
+.tab:hover:not(.ativa){background:var(--bg)}
+.tab-conteudo{display:none}.tab-conteudo.ativo{display:block}
+.tabela-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--borda)}
+table{width:100%;border-collapse:collapse}
+table th{background:var(--azul);color:#fff;text-align:left;padding:10px 14px;font-size:.78rem;font-weight:600}
+table td{padding:10px 14px;border-bottom:1px solid var(--borda);font-size:.85rem}
+table tr:last-child td{border-bottom:none}
+table tbody tr:hover td{background:#F7F9FF}
+.btn-ico{background:none;border:none;cursor:pointer;padding:4px 6px;
+  border-radius:6px;font-size:1rem;line-height:1}
+.btn-ico.del:hover{background:#FEE2E2}
+.secao-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.btn-add{display:inline-flex;align-items:center;gap:6px;border:none;
+  padding:9px 18px;border-radius:10px;font-weight:700;cursor:pointer;
+  font-size:.83rem;font-family:inherit;transition:filter .15s}
+.btn-add.laranja{background:var(--laranja);color:#fff}
+.btn-add.verde{background:var(--verde);color:#fff}
+.btn-add.roxo{background:var(--roxo);color:#fff}
+.btn-add.azul{background:var(--azul2);color:#fff}
+.btn-add.amarelo{background:var(--amarelo);color:var(--azul)}
+.btn-add:hover{filter:brightness(1.08)}
+.checklist-item{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--borda)}
+.checklist-item:last-child{border-bottom:none}
+.check-box{width:24px;height:24px;border-radius:7px;border:2.5px solid var(--borda);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all .15s;flex-shrink:0;font-size:.85rem}
+.check-box.marcado{background:var(--verde);border-color:var(--verde);color:#fff}
+.checklist-item.concluido .check-texto{text-decoration:line-through;color:var(--muted)}
+.check-texto{flex:1;font-size:.9rem}.check-resp{font-size:.75rem;color:var(--muted);white-space:nowrap}
+.orc-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:22px}
+.orc-card{border-radius:12px;padding:16px 18px;background:var(--bg)}
+.orc-label{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.orc-val{font-size:1.5rem;font-weight:900;color:var(--azul)}
+.orc-card.dest{background:linear-gradient(135deg,var(--azul),var(--azul2))}
+.orc-card.dest .orc-label,.orc-card.dest .orc-val{color:#fff}
+.part-grid{display:flex;flex-wrap:wrap;gap:10px}
+.part-chip{display:flex;align-items:center;gap:9px;background:var(--bg);
+  border-radius:30px;padding:8px 14px 8px 8px}
+.part-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.85rem;font-weight:800;color:#fff;flex-shrink:0}
+.part-nome{font-weight:600;font-size:.85rem}.part-role{font-size:.7rem;color:var(--muted)}
+.btn-rm{background:none;border:none;cursor:pointer;color:#EF4444;font-size:1rem;padding:0 0 0 4px}
+.u-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--borda)}
+.u-row:last-child{border-bottom:none}
+.u-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:1rem;font-weight:800;color:#fff;flex-shrink:0}
+.u-info{flex:1}.u-nome{font-weight:600;font-size:.9rem}.u-email{font-size:.78rem;color:var(--muted)}
+.badge{font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px}
+.b-sys{background:#FEF3C7;color:#92400E}.b-mem{background:#DBEAFE;color:#1E40AF}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(10,20,60,.5);
+  z-index:200;align-items:center;justify-content:center}
+.modal-bg.aberto{display:flex}
+.modal{background:#fff;border-radius:20px;padding:32px;width:520px;
+  max-width:95vw;max-height:92vh;overflow-y:auto;position:relative}
+.modal h3{font-size:1.25rem;font-weight:800;color:var(--azul);margin-bottom:20px}
+.modal-x{position:absolute;top:16px;right:18px;background:none;border:none;
+  font-size:1.5rem;cursor:pointer;color:var(--muted)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg .full{grid-column:1/-1}
+.fr{display:flex;flex-direction:column;gap:5px}
+.fr label{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.fr input,.fr select,.fr textarea{padding:10px 12px;border:1.5px solid var(--borda);border-radius:9px;
+  font-size:.9rem;font-family:inherit;outline:none}
+.fr input:focus,.fr select:focus,.fr textarea:focus{border-color:var(--azul2)}
+.fr textarea{resize:vertical;min-height:68px}
+.modal-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.btn-ok{background:var(--azul);color:#fff;border:none;padding:11px 24px;
+  border-radius:10px;font-weight:700;cursor:pointer;font-size:.9rem;font-family:inherit}
+.btn-ok:hover{background:var(--azul2)}
+.btn-cancel{background:var(--bg);color:var(--muted);border:none;padding:11px 18px;
+  border-radius:10px;font-weight:600;cursor:pointer;font-size:.9rem;font-family:inherit}
+.upload-area{border:2px dashed var(--borda);border-radius:12px;padding:22px;
+  text-align:center;cursor:pointer;background:var(--bg)}
+.upload-area:hover{border-color:var(--azul2);background:#EEF3FF}
+.upload-prev{width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-top:12px;display:none}
+#toast{position:fixed;bottom:26px;right:26px;z-index:999;color:#fff;
+  padding:12px 22px;border-radius:12px;font-size:.9rem;font-weight:600;
+  transform:translateY(80px);opacity:0;transition:all .3s;
+  box-shadow:0 8px 24px rgba(0,0,0,.2);pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.ok{background:var(--verde)}
+#toast.err{background:#EF4444}
+#toast.info{background:var(--azul2)}
+.flex{display:flex;align-items:center;gap:8px}.ml-auto{margin-left:auto}
+.vazio{text-align:center;padding:40px 20px;color:var(--muted);font-size:.9rem}
+.vazio-icone{font-size:2.8rem;margin-bottom:8px}
+.sep{height:1px;background:var(--borda);margin:16px 0}
+.banner-mock{background:linear-gradient(90deg,#FFF3CD,#FEF9E7);border:1px solid #FBBF24;
+  border-radius:10px;padding:10px 16px;font-size:.8rem;color:#92400E;margin-bottom:20px}
+.tag-auto{font-size:.68rem;background:#E0F2FE;color:#0369A1;padding:1px 6px;
+  border-radius:10px;font-weight:700;margin-left:4px;vertical-align:middle}
+@media print{
+  #app-header,.tabs,.dh-acoes,.btn-add,.secao-toolbar button,.btn-ico,.modal-bg,#toast{display:none!important}
+  .tab-conteudo{display:block!important}
+  body{background:#fff}
+  .card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}
+}
+@media(max-width:600px){
+  .login-box{padding:32px 22px;width:calc(100% - 32px)}
+  .fg{grid-template-columns:1fr}
+  #app-header{padding:0 14px}
+  .conteudo{padding:20px 14px}
+  .dh-nome{font-size:1.5rem}
+}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<div id="tela-login" class="tela ativa">
+  <div class="confetes" id="confetes"></div>
+  <div class="login-box">
+    <div class="login-logo">&#128506;&#65039; TripMate</div>
+    <div class="login-sub">Organize suas viagens em grupo</div>
+    <div id="login-erro" class="msg-erro"></div>
+    <label class="campo-label">E-mail</label>
+    <input class="campo-input" id="le" type="email" value="sysadmin@tripmate.com"/>
+    <label class="campo-label">Senha</label>
+    <input class="campo-input" id="ls" type="password" value="admin123"/>
+    <button class="btn-entrar" onclick="fazerLogin()">Entrar</button>
     <div class="login-dica">
       <strong>Contas de teste</strong><br/>
       sysadmin@tripmate.com / admin123 &mdash; SysAdmin<br/>
