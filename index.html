@@ -563,16 +563,26 @@ table tbody tr:hover td{background:#F7F9FF}
 
 <div class="modal-bg" id="m-part"><div class="modal">
   <button class="modal-x" onclick="fecharModal('m-part')">&#215;</button>
-  <h3>Adicionar participante</h3>
-  <div class="fr" style="margin-bottom:12px"><label>Usuario</label><select id="part-sel"></select></div>
-  <div class="fr" style="margin-bottom:16px"><label>Papel nesta viagem</label>
-    <select id="part-role">
-      <option value="MEMBRO">Membro</option>
-      <option value="TRIP_ADMIN">Admin da viagem</option>
-    </select>
+  <h3>&#128231; Convidar participante</h3>
+  <p style="color:var(--muted);font-size:.82rem;margin-bottom:16px;margin-top:-10px">
+    Digite o e-mail da pessoa. Se ela ja tiver conta sera adicionada direto. Se nao tiver, recebera um convite por e-mail para criar a conta e ja entrar na viagem.
+  </p>
+  <div class="fg">
+    <div class="fr full"><label>E-mail *</label>
+      <input id="conv-email" type="email" placeholder="email@exemplo.com"/>
+    </div>
+    <div class="fr full"><label>Nome (opcional)</label>
+      <input id="conv-nome" placeholder="Como chamar a pessoa?"/>
+    </div>
+    <div class="fr full"><label>Papel nesta viagem</label>
+      <select id="conv-role">
+        <option value="MEMBRO">Membro</option>
+        <option value="TRIP_ADMIN">Admin da viagem</option>
+      </select>
+    </div>
   </div>
   <div class="modal-actions">
-    <button class="btn-ok" onclick="salvarPart()">Adicionar</button>
+    <button class="btn-ok" id="btn-conv-ok" onclick="enviarConvite()">&#128231; Enviar convite</button>
     <button class="btn-cancel" onclick="fecharModal('m-part')">Cancelar</button>
   </div>
 </div></div>
@@ -1136,28 +1146,45 @@ function renderPart(){
 }
 function abrirModalPart(){
   if(!podeGerenciar()){toast('Sem permissao','err');return;}
-  var jaEsta=PARTS.map(function(p){return p.user_id;});
-  sb.from('profiles').select('id,nome,email').then(function(res){
-    var livres=(res.data||[]).filter(function(u){return jaEsta.indexOf(u.id)===-1;});
-    var sel=gi('part-sel'); sel.innerHTML='';
-    var opt0=document.createElement('option'); opt0.value=''; opt0.textContent='— selecione —';
-    sel.appendChild(opt0);
-    livres.forEach(function(u){
-      var opt=document.createElement('option'); opt.value=u.id;
-      opt.textContent=u.nome+' ('+u.email+')';
-      sel.appendChild(opt);
-    });
-    abrirModal('m-part');
-  });
+  clr(['conv-email','conv-nome']);
+  gi('conv-role').value='MEMBRO';
+  abrirModal('m-part');
 }
-function salvarPart(){
-  var uid=gi('part-sel').value, role=gi('part-role').value;
-  if(!uid){toast('Selecione um usuario','err');return;}
-  sb.from('viagem_participantes').insert({viagem_id:VA.id,user_id:uid,role:role}).then(function(res){
+
+function enviarConvite(){
+  var email=gv('conv-email'), nome=gv('conv-nome'), role=gi('conv-role').value;
+  if(!email){toast('E-mail e obrigatorio','err');return;}
+  var btn=gi('btn-conv-ok');
+  btn.disabled=true; btn.textContent='Enviando...';
+
+  // chama a Edge Function de convite
+  sb.functions.invoke('invite',{
+    body:{
+      email:email,
+      nome:nome||null,
+      viagemId:VA.id,
+      viagemNome:VA.nome,
+      role:role
+    }
+  }).then(function(res){
+    btn.disabled=false; btn.innerHTML='&#128231; Enviar convite';
     if(res.error){toast('Erro: '+res.error.message,'err');return;}
-    sb.from('viagem_participantes').select('user_id,role,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(r){
-      PARTS=r.data||[]; fecharModal('m-part'); renderPart(); toast('Participante adicionado','ok');
-    });
+    var data=res.data;
+    if(data&&data.ok){
+      fecharModal('m-part');
+      clr(['conv-email','conv-nome']);
+      // recarrega participantes
+      sb.from('viagem_participantes').select('user_id,role,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(r){
+        PARTS=r.data||[]; renderPart();
+      });
+      if(data.tipo==='ja_existe'){
+        toast(data.mensagem,'ok');
+      } else {
+        toast('Convite enviado para '+email+' !','ok');
+      }
+    } else {
+      toast('Erro ao enviar convite','err');
+    }
   });
 }
 function removerPart(uid){
