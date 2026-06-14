@@ -348,6 +348,7 @@ table tbody tr:hover td{background:#F7F9FF}
         <div class="dh-acoes">
           <button class="btn-dh am" id="btn-upload-capa" onclick="document.getElementById('inp-capa').click()">&#128247; Imagem</button>
           <input type="file" id="inp-capa" accept="image/*" style="display:none" onchange="uploadCapa(this)"/>
+          <button class="btn-dh" id="btn-editar-viagem" onclick="abrirEditarViagem()">&#9998; Editar</button>
           <button class="btn-dh" onclick="abrirModal('m-print')">&#128424; Imprimir</button>
           <button class="btn-dh" onclick="irPara('viagens')">&larr; Voltar</button>
         </div>
@@ -601,6 +602,23 @@ table tbody tr:hover td{background:#F7F9FF}
   <div class="modal-actions">
     <button class="btn-ok" onclick="salvarUsuario()">Criar</button>
     <button class="btn-cancel" onclick="fecharModal('m-usuario')">Cancelar</button>
+  </div>
+</div></div>
+
+<!-- MODAL EDITAR VIAGEM -->
+<div class="modal-bg" id="m-editar-viagem"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-editar-viagem')">&#215;</button>
+  <h3>&#9998; Editar viagem</h3>
+  <div class="fg">
+    <div class="fr full"><label>Nome da viagem *</label><input id="ev-nome" placeholder="Ex: Ferias na Europa 2026"/></div>
+    <div class="fr full"><label>Destino *</label><input id="ev-dest" placeholder="Ex: Paris, Roma e Lisboa"/></div>
+    <div class="fr"><label>Data de ida</label><input id="ev-ida" type="date"/></div>
+    <div class="fr"><label>Data de volta</label><input id="ev-volta" type="date"/></div>
+    <div class="fr full"><label>Observacoes</label><textarea id="ev-obs" placeholder="Notas gerais..."></textarea></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarEdicaoViagem()">Salvar alteracoes</button>
+    <button class="btn-cancel" onclick="fecharModal('m-editar-viagem')">Cancelar</button>
   </div>
 </div></div>
 
@@ -963,6 +981,7 @@ function abrirViagem(v){
     sb.from('convites_pendentes').select('*').eq('viagem_id',VA.id).eq('aceito',false).then(function(cr){
       CONVITES=cr.data||[];
       gi('btn-upload-capa').style.display=podeGerenciar()?'':'none';
+      gi('btn-editar-viagem').style.display=podeGerenciar()?'':'none';
       gi('btn-add-part').style.display=podeGerenciar()?'':'none';
       var tabs=document.querySelectorAll('.tab');
       var conts=document.querySelectorAll('.tab-conteudo');
@@ -1395,6 +1414,50 @@ function imprimir(secao){
     var ativas=document.querySelectorAll('.tab-conteudo.ativo');
     for(var i=0;i<ativas.length;i++) ativas[i].style.display='block';
   },150);
+}
+
+// ── EDITAR VIAGEM ──
+function abrirEditarViagem(){
+  if(!podeGerenciar()){toast('Sem permissao','err');return;}
+  gi('ev-nome').value  = VA.nome || '';
+  gi('ev-dest').value  = VA.destino || '';
+  gi('ev-ida').value   = VA.ida || '';
+  gi('ev-volta').value = VA.volta || '';
+  gi('ev-obs').value   = VA.obs || '';
+  abrirModal('m-editar-viagem');
+}
+
+function salvarEdicaoViagem(){
+  var nome  = gi('ev-nome').value.trim();
+  var dest  = gi('ev-dest').value.trim();
+  var ida   = gi('ev-ida').value;
+  var volta = gi('ev-volta').value;
+  var obs   = gi('ev-obs').value;
+
+  if(!nome||!dest){toast('Nome e destino sao obrigatorios','err');return;}
+
+  var btn = document.querySelector('#m-editar-viagem .btn-ok');
+  if(btn){btn.disabled=true;btn.textContent='Salvando...';}
+
+  sb.from('viagens').update({
+    nome:nome, destino:dest,
+    ida:ida||null, volta:volta||null, obs:obs
+  }).eq('id',VA.id).then(function(res){
+    if(btn){btn.disabled=false;btn.textContent='Salvar alteracoes';}
+    if(res.error){toast('Erro: '+res.error.message,'err');return;}
+    // atualiza objeto local
+    VA.nome    = nome;
+    VA.destino = dest;
+    VA.ida     = ida;
+    VA.volta   = volta;
+    VA.obs     = obs;
+    // atualiza cabecalho
+    gi('dh-nome').textContent  = nome;
+    gi('dh-dest').innerHTML    = '&#128205; ' + dest;
+    gi('dh-datas').textContent = fmtD(ida) + ' → ' + fmtD(volta);
+    fecharModal('m-editar-viagem');
+    toast('Viagem atualizada!','ok');
+  });
 }
 
 // ── TOAST ──
