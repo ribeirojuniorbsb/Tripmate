@@ -205,6 +205,15 @@ table tbody tr:hover td{background:#F7F9FF}
   .dh-nome{font-size:1.5rem}
 }
 
+/* ── SELETOR PARTICIPANTES ── */
+.part-check{display:flex;align-items:center;gap:6px;background:var(--bg);
+  border-radius:20px;padding:5px 10px;cursor:pointer;font-size:.82rem;
+  border:1.5px solid transparent;transition:all .15s}
+.part-check.selecionado{background:var(--azul);color:#fff;border-color:var(--azul)}
+.part-check.selecionado .pc-av{background:rgba(255,255,255,.3)}
+.pc-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.7rem;font-weight:800;color:#fff;flex-shrink:0}
+
 /* ── DESKTOP ── */
 @media(min-width:900px){
   /* Login: painel lateral */
@@ -364,7 +373,7 @@ table tbody tr:hover td{background:#F7F9FF}
     </div>
     <div id="tab-voos" class="tab-conteudo ativo"><div class="card">
       <div class="secao-toolbar"><div class="card-titulo">&#9992; Voos</div>
-        <button class="btn-add laranja" onclick="abrirModal('m-voo')">+ Adicionar voo</button></div>
+        <button class="btn-add laranja" onclick="abrirModalVoo()">+ Adicionar voo</button></div>
       <div class="tabela-wrap"><table><thead><tr>
         <th>Companhia</th><th>No.</th><th>Trecho</th><th>Partida</th><th>Chegada</th>
         <th>Localizador</th><th>Valor</th><th>Passageiros</th><th></th>
@@ -372,7 +381,7 @@ table tbody tr:hover td{background:#F7F9FF}
     </div></div>
     <div id="tab-hospedagem" class="tab-conteudo"><div class="card">
       <div class="secao-toolbar"><div class="card-titulo">&#127968; Hospedagem</div>
-        <button class="btn-add verde" onclick="abrirModal('m-hosp')">+ Adicionar</button></div>
+        <button class="btn-add verde" onclick="abrirModalHosp()">+ Adicionar</button></div>
       <div class="tabela-wrap"><table><thead><tr>
         <th>Local</th><th>Endereco</th><th>Check-in</th><th>Check-out</th>
         <th>Localizador</th><th>Valor</th><th>Obs</th><th></th>
@@ -380,7 +389,7 @@ table tbody tr:hover td{background:#F7F9FF}
     </div></div>
     <div id="tab-parques" class="tab-conteudo"><div class="card">
       <div class="secao-toolbar"><div class="card-titulo">&#127914; Passeios e Ingressos</div>
-        <button class="btn-add roxo" onclick="abrirModal('m-parque')">+ Adicionar</button></div>
+        <button class="btn-add roxo" onclick="abrirModalParque()">+ Adicionar</button></div>
       <div class="tabela-wrap"><table><thead><tr>
         <th>Local / Atracao</th><th>Data</th><th>Tipo</th><th>Qtd</th><th>Valor</th><th>Obs</th><th></th>
       </tr></thead><tbody id="tb-parques"></tbody></table></div>
@@ -473,7 +482,11 @@ table tbody tr:hover td{background:#F7F9FF}
     <div class="fr"><label>Chegada</label><input id="fch" type="datetime-local"/></div>
     <div class="fr"><label>Localizador</label><input id="fl" placeholder="ABC123"/></div>
     <div class="fr"><label>Valor (R$)</label><input id="fv" type="number" min="0" placeholder="0"/></div>
-    <div class="fr full"><label>Passageiros</label><input id="fps" placeholder="Quem viaja neste voo?"/></div>
+    <div class="fr full"><label>Passageiros</label>
+      <div id="sel-pass-voo" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1.5px solid var(--borda);border-radius:9px;min-height:44px">
+        <span style="color:var(--muted);font-size:.85rem;align-self:center">Carregando participantes...</span>
+      </div>
+    </div>
   </div>
   <div class="modal-actions">
     <button class="btn-ok" onclick="salvarVoo()">Salvar</button>
@@ -491,6 +504,11 @@ table tbody tr:hover td{background:#F7F9FF}
     <div class="fr"><label>Check-out</label><input id="hco" type="date"/></div>
     <div class="fr"><label>Localizador</label><input id="hl" placeholder="Booking #..."/></div>
     <div class="fr"><label>Valor (R$)</label><input id="hv" type="number" min="0" placeholder="0"/></div>
+    <div class="fr full"><label>Hospedes</label>
+      <div id="sel-pass-hosp" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1.5px solid var(--borda);border-radius:9px;min-height:44px">
+        <span style="color:var(--muted);font-size:.85rem;align-self:center">Carregando participantes...</span>
+      </div>
+    </div>
     <div class="fr full"><label>Observacoes</label><textarea id="ho" placeholder="Cafe incluso..."></textarea></div>
   </div>
   <div class="modal-actions">
@@ -508,6 +526,11 @@ table tbody tr:hover td{background:#F7F9FF}
     <div class="fr"><label>Tipo</label><input id="pt" placeholder="Ingresso, excursao..."/></div>
     <div class="fr"><label>Quantidade</label><input id="pq" type="number" value="1" min="1"/></div>
     <div class="fr"><label>Valor total (R$)</label><input id="pv" type="number" min="0" placeholder="0"/></div>
+    <div class="fr full"><label>Participantes</label>
+      <div id="sel-pass-parque" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1.5px solid var(--borda);border-radius:9px;min-height:44px">
+        <span style="color:var(--muted);font-size:.85rem;align-self:center">Carregando participantes...</span>
+      </div>
+    </div>
     <div class="fr full"><label>Observacoes</label><input id="po" placeholder="Ponto de encontro..."/></div>
   </div>
   <div class="modal-actions">
@@ -564,27 +587,37 @@ table tbody tr:hover td{background:#F7F9FF}
 
 <div class="modal-bg" id="m-part"><div class="modal">
   <button class="modal-x" onclick="fecharModal('m-part')">&#215;</button>
-  <h3>&#128231; Convidar participante</h3>
-  <p style="color:var(--muted);font-size:.82rem;margin-bottom:16px;margin-top:-10px">
-    Digite o e-mail da pessoa. Se ela ja tiver conta sera adicionada direto. Se nao tiver, recebera um convite por e-mail para criar a conta e ja entrar na viagem.
-  </p>
-  <div class="fg">
-    <div class="fr full"><label>E-mail *</label>
-      <input id="conv-email" type="email" placeholder="email@exemplo.com"/>
+  <h3>&#128101; Adicionar participante</h3>
+  <!-- abas -->
+  <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--bg);border-radius:10px;padding:4px">
+    <button id="tab-convite" onclick="abrirAbaConvite()" style="flex:1;padding:9px;border:none;border-radius:8px;font-weight:700;font-size:.85rem;cursor:pointer;background:var(--azul);color:#fff;font-family:inherit">&#128231; Convidar por e-mail</button>
+    <button id="tab-semacesso" onclick="abrirAbaSemAcesso()" style="flex:1;padding:9px;border:none;border-radius:8px;font-weight:700;font-size:.85rem;cursor:pointer;background:transparent;color:var(--muted);font-family:inherit">&#128100; Adicionar sem acesso</button>
+  </div>
+  <!-- painel convite -->
+  <div id="painel-convite">
+    <p style="color:var(--muted);font-size:.82rem;margin-bottom:14px">Digite o e-mail. Se ja tiver conta sera adicionado direto, senao recebe link de convite.</p>
+    <div class="fg">
+      <div class="fr full"><label>E-mail *</label><input id="conv-email" type="email" placeholder="email@exemplo.com"/></div>
+      <div class="fr full"><label>Nome (opcional)</label><input id="conv-nome" placeholder="Como chamar a pessoa?"/></div>
+      <div class="fr full"><label>Papel nesta viagem</label>
+        <select id="conv-role"><option value="MEMBRO">Membro</option><option value="TRIP_ADMIN">Admin da viagem</option></select>
+      </div>
     </div>
-    <div class="fr full"><label>Nome (opcional)</label>
-      <input id="conv-nome" placeholder="Como chamar a pessoa?"/>
-    </div>
-    <div class="fr full"><label>Papel nesta viagem</label>
-      <select id="conv-role">
-        <option value="MEMBRO">Membro</option>
-        <option value="TRIP_ADMIN">Admin da viagem</option>
-      </select>
+    <div class="modal-actions">
+      <button class="btn-ok" id="btn-conv-ok" onclick="enviarConvite()">&#128231; Enviar convite</button>
+      <button class="btn-cancel" onclick="fecharModal('m-part')">Cancelar</button>
     </div>
   </div>
-  <div class="modal-actions">
-    <button class="btn-ok" id="btn-conv-ok" onclick="enviarConvite()">&#128231; Enviar convite</button>
-    <button class="btn-cancel" onclick="fecharModal('m-part')">Cancelar</button>
+  <!-- painel sem acesso -->
+  <div id="painel-semacesso" style="display:none">
+    <p style="color:var(--muted);font-size:.82rem;margin-bottom:14px">Para criancas e acompanhantes que nao precisam de acesso ao sistema mas devem aparecer nos dados da viagem.</p>
+    <div class="fg">
+      <div class="fr full"><label>Nome completo *</label><input id="sa-nome" placeholder="Ex: Ana Julia (filha)"/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ok" onclick="adicionarSemAcesso()">&#128100; Adicionar</button>
+      <button class="btn-cancel" onclick="fecharModal('m-part')">Cancelar</button>
+    </div>
   </div>
 </div></div>
 
@@ -976,7 +1009,7 @@ function abrirViagem(v){
   var img=gi('dh-img');
   if(VA.capa_url){img.src=VA.capa_url;img.style.display='block';}
   else{img.src='';img.style.display='none';}
-  sb.from('viagem_participantes').select('user_id,role,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(res){
+  sb.from('viagem_participantes').select('id,user_id,role,sem_acesso,nome_externo,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(res){
     PARTS=res.data||[];
     sb.from('convites_pendentes').select('*').eq('viagem_id',VA.id).eq('aceito',false).then(function(cr){
       CONVITES=cr.data||[];
@@ -1007,12 +1040,18 @@ function renderVoos(){
     });
   });
 }
+function abrirModalVoo(){
+  renderSeletorParticipantes('sel-pass-voo', []);
+  abrirModal('m-voo');
+}
+
 function salvarVoo(){
   var val=parseFloat(gv('fv'))||0;
   var cia=gv('fc'),num=gv('fn'),orig=gv('fo'),dest=gv('fd');
+  var passageiros = getSelecionados('sel-pass-voo');
   sb.from('voos').insert({viagem_id:VA.id,cia:cia,num:num,orig:orig,dest:dest,
     partida:gi('fp').value||null,chegada:gi('fch').value||null,
-    localizador:gv('fl'),valor:val,passageiros:gv('fps')}).select().single().then(function(res){
+    localizador:gv('fl'),valor:val,passageiros:passageiros}).select().single().then(function(res){
     if(res.error){toast('Erro: '+res.error.message,'err');return;}
     if(val>0){
       var desc=[cia,num];if(orig&&dest)desc.push(orig+' - '+dest);
@@ -1039,11 +1078,18 @@ function renderHosp(){
     });
   });
 }
+function abrirModalHosp(){
+  renderSeletorParticipantes('sel-pass-hosp', []);
+  abrirModal('m-hosp');
+}
+
 function salvarHosp(){
   var val=parseFloat(gv('hv'))||0, nome=gv('hn2');
+  var hospedes = getSelecionados('sel-pass-hosp');
+  var obsCompleto = gv('ho') + (hospedes ? ' | Hospedes: '+hospedes : '');
   sb.from('hospedagem').insert({viagem_id:VA.id,nome:nome,endereco:gv('he'),
     checkin:gv('hci')||null,checkout:gv('hco')||null,
-    localizador:gv('hl'),valor:val,obs:gv('ho')}).select().single().then(function(res){
+    localizador:gv('hl'),valor:val,obs:obsCompleto}).select().single().then(function(res){
     if(res.error){toast('Erro: '+res.error.message,'err');return;}
     if(val>0){
       sb.from('despesas').insert({viagem_id:VA.id,descricao:nome||'Hospedagem',
@@ -1069,13 +1115,18 @@ function renderParques(){
     });
   });
 }
+function abrirModalParque(){
+  renderSeletorParticipantes('sel-pass-parque', []);
+  abrirModal('m-parque');
+}
+
 function salvarParque(){
   var nome=gv('pn');
   if(!nome){toast('Nome e obrigatorio','err');return;}
   var val=parseFloat(gv('pv'))||0;
   sb.from('passeios').insert({viagem_id:VA.id,nome:nome,data:gv('pd')||null,
     tipo:gv('pt'),quantidade:parseInt(gi('pq').value)||1,
-    valor:val,obs:gv('po')}).select().single().then(function(res){
+    valor:val,obs:gv('po') + (getSelecionados('sel-pass-parque') ? ' | Participantes: '+getSelecionados('sel-pass-parque') : '')}).select().single().then(function(res){
     if(res.error){toast('Erro: '+res.error.message,'err');return;}
     if(val>0){
       sb.from('despesas').insert({viagem_id:VA.id,descricao:nome,
@@ -1189,8 +1240,28 @@ var CONVITES = [];
 function renderPart(){
   var g=gi('part-grid'); g.innerHTML='';
 
-  // participantes confirmados
+  // participantes confirmados e sem acesso
   PARTS.forEach(function(p){
+    // sem acesso
+    if(p.sem_acesso){
+      var chip=document.createElement('div'); chip.className='part-chip';
+      chip.style.cssText='border:1.5px solid var(--borda)';
+      var av=document.createElement('div'); av.className='part-av';
+      av.style.background='#94A3B8'; av.innerHTML='&#128100;';
+      var info=document.createElement('div');
+      var nm=document.createElement('div'); nm.className='part-nome'; nm.textContent=p.nome_externo||'Sem nome';
+      var rl=document.createElement('div'); rl.className='part-role';
+      rl.innerHTML='<span style="background:#F1F5F9;color:#64748B;padding:1px 6px;border-radius:8px;font-size:.68rem;font-weight:700">Sem acesso</span>';
+      info.appendChild(nm); info.appendChild(rl);
+      chip.appendChild(av); chip.appendChild(info);
+      if(podeGerenciar()){
+        var rm=document.createElement('button'); rm.className='btn-rm'; rm.innerHTML='&times;';
+        rm.onclick=(function(pid){return function(){removerPartById(pid);};})(p.id);
+        chip.appendChild(rm);
+      }
+      g.appendChild(chip);
+      return;
+    }
     var u=p.profiles; if(!u) return;
     var lbls={TRIP_ADMIN:'Admin da viagem',MEMBRO:'Membro',SYSADMIN:'SysAdmin'};
     var chip=document.createElement('div'); chip.className='part-chip';
@@ -1252,8 +1323,9 @@ function renderPart(){
 }
 function abrirModalPart(){
   if(!podeGerenciar()){toast('Sem permissao','err');return;}
-  clr(['conv-email','conv-nome']);
+  clr(['conv-email','conv-nome','sa-nome']);
   gi('conv-role').value='MEMBRO';
+  abrirAbaConvite();
   abrirModal('m-part');
 }
 
@@ -1304,10 +1376,10 @@ function enviarConvite(){
 }
 
 function recarregarParts(){
-  sb.from('viagem_participantes').select('user_id,role,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(r){
+  sb.from('viagem_participantes').select('id,user_id,role,sem_acesso,nome_externo,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(r){
     PARTS=r.data||[];
-    sb.from('convites_pendentes').select('*').eq('viagem_id',VA.id).eq('aceito',false).then(function(c){
-      CONVITES=c.data||[];
+    sb.from('convites_pendentes').select('*').eq('viagem_id',VA.id).eq('aceito',false).then(function(cv){
+      CONVITES=cv.data||[];
       renderPart();
     });
   });
@@ -1336,6 +1408,13 @@ function removerPart(uid){
   if(!confirm('Remover este participante?')) return;
   sb.from('viagem_participantes').delete().eq('viagem_id',VA.id).eq('user_id',uid).then(function(){
     PARTS=PARTS.filter(function(p){return p.user_id!==uid;});
+    renderPart(); toast('Participante removido','info');
+  });
+}
+function removerPartById(id){
+  if(!confirm('Remover este participante?')) return;
+  sb.from('viagem_participantes').delete().eq('id',id).then(function(){
+    PARTS=PARTS.filter(function(p){return p.id!==id;});
     renderPart(); toast('Participante removido','info');
   });
 }
@@ -1414,6 +1493,82 @@ function imprimir(secao){
     var ativas=document.querySelectorAll('.tab-conteudo.ativo');
     for(var i=0;i<ativas.length;i++) ativas[i].style.display='block';
   },150);
+}
+
+// ── ABAS MODAL PARTICIPANTES ──
+function abrirAbaConvite(){
+  gi('painel-convite').style.display='';
+  gi('painel-semacesso').style.display='none';
+  gi('tab-convite').style.background='var(--azul)';
+  gi('tab-convite').style.color='#fff';
+  gi('tab-semacesso').style.background='transparent';
+  gi('tab-semacesso').style.color='var(--muted)';
+}
+function abrirAbaSemAcesso(){
+  gi('painel-convite').style.display='none';
+  gi('painel-semacesso').style.display='';
+  gi('tab-semacesso').style.background='var(--azul)';
+  gi('tab-semacesso').style.color='#fff';
+  gi('tab-convite').style.background='transparent';
+  gi('tab-convite').style.color='var(--muted)';
+}
+
+function adicionarSemAcesso(){
+  var nome = gi('sa-nome').value.trim();
+  if(!nome){toast('Nome e obrigatorio','err');return;}
+  sb.from('viagem_participantes').insert({
+    viagem_id:VA.id, user_id:null,
+    nome_externo:nome, sem_acesso:true, role:'MEMBRO'
+  }).then(function(res){
+    if(res.error){toast('Erro: '+res.error.message,'err');return;}
+    gi('sa-nome').value='';
+    fecharModal('m-part');
+    recarregarParts();
+    toast(nome+' adicionado!','ok');
+  });
+}
+
+// ── SELETOR DE PARTICIPANTES ──
+function renderSeletorParticipantes(containerId, selecionados){
+  var container = gi(containerId);
+  if(!container) return;
+  container.innerHTML='';
+
+  // todos os participantes da viagem (com e sem acesso)
+  var todos = [];
+  PARTS.forEach(function(p){
+    var nome = p.profiles ? p.profiles.nome : (p.nome_externo||'?');
+    todos.push({id: p.user_id||('ext_'+p.id), nome:nome, cor: p.profiles?corAv(p.profiles.id):'#94A3B8'});
+  });
+
+  if(!todos.length){
+    container.innerHTML='<span style="color:var(--muted);font-size:.85rem">Nenhum participante ainda</span>';
+    return;
+  }
+
+  todos.forEach(function(u){
+    var sel = selecionados && selecionados.indexOf(u.id) !== -1;
+    var chip = document.createElement('div');
+    chip.className = 'part-check' + (sel?' selecionado':'');
+    chip.setAttribute('data-id', u.id);
+    chip.setAttribute('data-nome', u.nome);
+    var av = document.createElement('div'); av.className='pc-av';
+    av.style.background = u.cor;
+    av.textContent = u.nome.charAt(0).toUpperCase();
+    var nm = document.createElement('span'); nm.textContent = u.nome;
+    chip.appendChild(av); chip.appendChild(nm);
+    chip.onclick = function(){
+      chip.classList.toggle('selecionado');
+    };
+    container.appendChild(chip);
+  });
+}
+
+function getSelecionados(containerId){
+  var nomes = [];
+  var chips = gi(containerId).querySelectorAll('.part-check.selecionado');
+  chips.forEach(function(ch){ nomes.push(ch.getAttribute('data-nome')); });
+  return nomes.join(', ');
 }
 
 // ── EDITAR VIAGEM ──
