@@ -742,12 +742,51 @@ function iniciarSessao(user){
     gi('tela-app').style.display='block';
     irPara('viagens');
     toast('Ola, '+ME.nome+'!','ok');
+    // processa convites pendentes
+    processarConvitePendente(ME.id, ME.email);
   });
 }
 
 sb.auth.getSession().then(function(res){
-  if(res.data&&res.data.session) iniciarSessao(res.data.session.user);
+  if(res.data&&res.data.session){
+    iniciarSessao(res.data.session.user);
+  } else {
+    // verifica se tem token de convite na URL
+    var params = new URLSearchParams(window.location.search);
+    var token = params.get('convite');
+    var emailConvite = params.get('email');
+    if(token && emailConvite){
+      // pré-preenche o email e abre cadastro
+      gi('le').value = decodeURIComponent(emailConvite);
+      gi('tela-login').style.display = 'flex';
+      // guarda o token para processar apos cadastro
+      window._conviteToken = token;
+      window._conviteEmail = decodeURIComponent(emailConvite);
+      // abre modal de cadastro automaticamente
+      setTimeout(function(){
+        gi('ce').value = decodeURIComponent(emailConvite);
+        abrirModal('m-cadastro');
+        toast('Complete seu cadastro para entrar na viagem!','ok');
+      }, 500);
+    }
+  }
 });
+
+// processa convite pendente apos login/cadastro
+function processarConvitePendente(userId, email){
+  sb.from('convites_pendentes').select('*').eq('email',email).eq('aceito',false).then(function(res){
+    var convites = res.data||[];
+    if(!convites.length) return;
+    var inserts = convites.map(function(cv){
+      return {viagem_id:cv.viagem_id, user_id:userId, role:cv.role||'MEMBRO'};
+    });
+    sb.from('viagem_participantes').upsert(inserts).then(function(){
+      sb.from('convites_pendentes').update({aceito:true}).eq('email',email).then(function(){
+        toast('Voce foi adicionado a '+ convites.length +' viagem(ns)!','ok');
+      });
+    });
+  });
+}
 
 function sair(){
   sb.auth.signOut().then(function(){
@@ -921,14 +960,17 @@ function abrirViagem(v){
   else{img.src='';img.style.display='none';}
   sb.from('viagem_participantes').select('user_id,role,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(res){
     PARTS=res.data||[];
-    gi('btn-upload-capa').style.display=podeGerenciar()?'':'none';
-    gi('btn-add-part').style.display=podeGerenciar()?'':'none';
-    var tabs=document.querySelectorAll('.tab');
-    var conts=document.querySelectorAll('.tab-conteudo');
-    for(var i=0;i<tabs.length;i++) tabs[i].classList.toggle('ativa',i===0);
-    for(var i=0;i<conts.length;i++) conts[i].classList.toggle('ativo',i===0);
-    renderVoos();renderHosp();renderParques();renderOrc();renderCheck();renderPart();
-    irPara('detalhe');
+    sb.from('convites_pendentes').select('*').eq('viagem_id',VA.id).eq('aceito',false).then(function(cr){
+      CONVITES=cr.data||[];
+      gi('btn-upload-capa').style.display=podeGerenciar()?'':'none';
+      gi('btn-add-part').style.display=podeGerenciar()?'':'none';
+      var tabs=document.querySelectorAll('.tab');
+      var conts=document.querySelectorAll('.tab-conteudo');
+      for(var i=0;i<tabs.length;i++) tabs[i].classList.toggle('ativa',i===0);
+      for(var i=0;i<conts.length;i++) conts[i].classList.toggle('ativo',i===0);
+      renderVoos();renderHosp();renderParques();renderOrc();renderCheck();renderPart();
+      irPara('detalhe');
+    });
   });
 }
 
@@ -1123,8 +1165,12 @@ function salvarItem(){
 }
 
 // ── PARTICIPANTES ──
+var CONVITES = [];
+
 function renderPart(){
   var g=gi('part-grid'); g.innerHTML='';
+
+  // participantes confirmados
   PARTS.forEach(function(p){
     var u=p.profiles; if(!u) return;
     var lbls={TRIP_ADMIN:'Admin da viagem',MEMBRO:'Membro',SYSADMIN:'SysAdmin'};
@@ -1143,6 +1189,47 @@ function renderPart(){
     }
     g.appendChild(chip);
   });
+
+  // convites pendentes
+  CONVITES.forEach(function(cv){
+    var chip=document.createElement('div');
+    chip.className='part-chip';
+    chip.style.cssText='border:2px dashed var(--borda);opacity:.85';
+
+    var av=document.createElement('div'); av.className='part-av';
+    av.style.background='#94A3B8'; av.innerHTML='&#9993;';
+
+    var info=document.createElement('div');
+    var nm=document.createElement('div'); nm.className='part-nome';
+    nm.textContent=(cv.nome_convidado||cv.email);
+    var rl=document.createElement('div'); rl.className='part-role';
+    rl.innerHTML='<span style="background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:8px;font-size:.68rem;font-weight:700">Pendente</span>';
+    info.appendChild(nm); info.appendChild(rl);
+
+    var acoes=document.createElement('div');
+    acoes.style.cssText='display:flex;gap:4px;margin-left:auto';
+
+    var btnCopy=document.createElement('button');
+    btnCopy.className='btn-header';
+    btnCopy.style.cssText='background:var(--verde);border:none;color:#fff;padding:4px 10px;border-radius:8px;font-size:.75rem;cursor:pointer';
+    btnCopy.innerHTML='&#128203; Link';
+    btnCopy.onclick=(function(lk){return function(){copiarLink(lk);};})(cv.link);
+
+    var btnCancel=document.createElement('button');
+    btnCancel.className='btn-rm';
+    btnCancel.innerHTML='&times;';
+    btnCancel.onclick=(function(id){return function(){cancelarConvite(id);};})(cv.id);
+
+    acoes.appendChild(btnCopy); acoes.appendChild(btnCancel);
+    chip.appendChild(av); chip.appendChild(info); chip.appendChild(acoes);
+    g.appendChild(chip);
+  });
+
+  if(!PARTS.length && !CONVITES.length){
+    var div=document.createElement('div'); div.className='vazio';
+    div.textContent='Nenhum participante ainda.';
+    g.appendChild(div);
+  }
 }
 function abrirModalPart(){
   if(!podeGerenciar()){toast('Sem permissao','err');return;}
@@ -1151,40 +1238,79 @@ function abrirModalPart(){
   abrirModal('m-part');
 }
 
+function gerarToken(){
+  var arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+}
+
 function enviarConvite(){
   var email=gv('conv-email'), nome=gv('conv-nome'), role=gi('conv-role').value;
   if(!email){toast('E-mail e obrigatorio','err');return;}
   var btn=gi('btn-conv-ok');
-  btn.disabled=true; btn.textContent='Enviando...';
+  btn.disabled=true; btn.textContent='Processando...';
 
-  // chama a Edge Function de convite
-  sb.functions.invoke('invite',{
-    body:{
-      email:email,
-      nome:nome||null,
-      viagemId:VA.id,
-      viagemNome:VA.nome,
-      role:role
-    }
-  }).then(function(res){
-    btn.disabled=false; btn.innerHTML='&#128231; Enviar convite';
-    if(res.error){toast('Erro: '+res.error.message,'err');return;}
-    var data=res.data;
-    if(data&&data.ok){
-      fecharModal('m-part');
-      clr(['conv-email','conv-nome']);
-      // recarrega participantes
-      sb.from('viagem_participantes').select('user_id,role,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(r){
-        PARTS=r.data||[]; renderPart();
+  // verifica se ja tem conta
+  sb.from('profiles').select('id,nome').eq('email',email).single().then(function(res){
+    if(res.data){
+      // usuario ja existe — adiciona direto
+      sb.from('viagem_participantes').upsert({viagem_id:VA.id,user_id:res.data.id,role:role}).then(function(){
+        btn.disabled=false; btn.innerHTML='&#128231; Enviar convite';
+        fecharModal('m-part'); clr(['conv-email','conv-nome']);
+        recarregarParts();
+        toast(res.data.nome+' ja tem conta e foi adicionado!','ok');
       });
-      if(data.tipo==='ja_existe'){
-        toast(data.mensagem,'ok');
-      } else {
-        toast('Convite enviado para '+email+' !','ok');
-      }
-    } else {
-      toast('Erro ao enviar convite','err');
+      return;
     }
+
+    // usuario nao existe — cria convite pendente com token
+    var token = gerarToken();
+    var link = window.location.origin + window.location.pathname + '?convite=' + token + '&email=' + encodeURIComponent(email);
+
+    sb.from('convites_pendentes').upsert({
+      email:email,
+      viagem_id:VA.id,
+      token:token,
+      nome_convidado:nome||null,
+      role:role,
+      link:link,
+      aceito:false
+    }).then(function(err){
+      btn.disabled=false; btn.innerHTML='&#128231; Enviar convite';
+      fecharModal('m-part'); clr(['conv-email','conv-nome']);
+      recarregarParts();
+      toast('Convite gerado! Copie o link na lista de participantes.','ok');
+    });
+  });
+}
+
+function recarregarParts(){
+  sb.from('viagem_participantes').select('user_id,role,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(r){
+    PARTS=r.data||[];
+    sb.from('convites_pendentes').select('*').eq('viagem_id',VA.id).eq('aceito',false).then(function(c){
+      CONVITES=c.data||[];
+      renderPart();
+    });
+  });
+}
+
+function copiarLink(link){
+  navigator.clipboard.writeText(link).then(function(){
+    toast('Link copiado! Cole no WhatsApp ou e-mail.','ok');
+  }).catch(function(){
+    // fallback
+    var el=document.createElement('textarea');
+    el.value=link; document.body.appendChild(el);
+    el.select(); document.execCommand('copy');
+    document.body.removeChild(el);
+    toast('Link copiado!','ok');
+  });
+}
+
+function cancelarConvite(id){
+  if(!confirm('Cancelar este convite?')) return;
+  sb.from('convites_pendentes').delete().eq('id',id).then(function(){
+    recarregarParts(); toast('Convite cancelado','info');
   });
 }
 function removerPart(uid){
