@@ -205,6 +205,27 @@ table tbody tr:hover td{background:#F7F9FF}
   .dh-nome{font-size:1.5rem}
 }
 
+/* ── DOCUMENTOS ── */
+.doc-card{background:var(--bg);border-radius:12px;padding:16px;margin-bottom:12px;
+  display:flex;align-items:center;gap:14px;border:1px solid var(--borda)}
+.doc-foto{width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;
+  background:var(--borda);display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;overflow:hidden}
+.doc-foto img{width:100%;height:100%;object-fit:cover;border-radius:10px;cursor:pointer}
+.doc-info{flex:1}
+.doc-tipo{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--muted);margin-bottom:2px}
+.doc-nome{font-weight:700;font-size:.95rem;color:var(--azul);margin-bottom:2px}
+.doc-detalhe{font-size:.8rem;color:var(--muted)}
+.doc-titular{font-size:.75rem;background:var(--bg);border:1px solid var(--borda);
+  padding:2px 8px;border-radius:10px;color:var(--azul);font-weight:600}
+
+/* lightbox */
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);
+  z-index:999;align-items:center;justify-content:center;cursor:zoom-out}
+#lightbox.aberto{display:flex}
+#lightbox img{max-width:95vw;max-height:95vh;border-radius:12px;object-fit:contain}
+
 /* ── SELETOR PARTICIPANTES ── */
 .part-check{display:flex;align-items:center;gap:6px;background:var(--bg);
   border-radius:20px;padding:5px 10px;cursor:pointer;font-size:.82rem;
@@ -276,6 +297,7 @@ table tbody tr:hover td{background:#F7F9FF}
 </head>
 <body>
 <div id="toast"></div>
+<div id="lightbox" onclick="fecharLightbox()"><img id="lightbox-img" src=""/></div>
 
 <div id="tela-login" class="tela ativa">
   <div class="confetes" id="confetes"></div>
@@ -370,6 +392,7 @@ table tbody tr:hover td{background:#F7F9FF}
       <button class="tab" data-cor="azul"    onclick="ativarTab('orcamento',this)">&#128176; Orcamento</button>
       <button class="tab" data-cor="amarelo" onclick="ativarTab('checklist',this)">&#10003; Checklist</button>
       <button class="tab" data-cor="muted"   onclick="ativarTab('participantes',this)">&#128101; Participantes</button>
+      <button class="tab" data-cor="verde"   onclick="ativarTab('documentos',this)">&#128196; Documentos</button>
     </div>
     <div id="tab-voos" class="tab-conteudo ativo"><div class="card">
       <div class="secao-toolbar"><div class="card-titulo">&#9992; Voos</div>
@@ -424,6 +447,18 @@ table tbody tr:hover td{background:#F7F9FF}
         <button class="btn-add azul" id="btn-add-part" onclick="abrirModalPart()">+ Adicionar</button></div>
       <div class="part-grid" id="part-grid"></div>
     </div></div>
+
+    <!-- DOCUMENTOS -->
+    <div id="tab-documentos" class="tab-conteudo"><div class="card">
+      <div class="secao-toolbar">
+        <div class="card-titulo">&#128196; Documentos</div>
+        <button class="btn-add verde" onclick="abrirModalDoc()">+ Adicionar documento</button>
+      </div>
+      <p class="card-sub">Passaportes, vistos, CNH, RG e comprovantes importantes para a viagem.</p>
+      <div id="lista-docs"></div>
+    </div></div>
+
+
   </div>
 </div>
 
@@ -638,6 +673,47 @@ table tbody tr:hover td{background:#F7F9FF}
   </div>
 </div></div>
 
+<!-- MODAL DOCUMENTO -->
+<div class="modal-bg" id="m-doc"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-doc')">&#215;</button>
+  <h3>&#128196; Adicionar documento</h3>
+  <div class="fg">
+    <div class="fr full"><label>Titular *</label>
+      <select id="doc-titular"></select>
+    </div>
+    <div class="fr"><label>Tipo *</label>
+      <select id="doc-tipo">
+        <option value="Passaporte">Passaporte</option>
+        <option value="RG">RG</option>
+        <option value="CNH">CNH</option>
+        <option value="Visto">Visto</option>
+        <option value="Seguro viagem">Seguro viagem</option>
+        <option value="Reserva">Reserva / Comprovante</option>
+        <option value="Outro">Outro</option>
+      </select>
+    </div>
+    <div class="fr"><label>Numero / Referencia</label>
+      <input id="doc-numero" placeholder="Ex: BR123456"/>
+    </div>
+    <div class="fr full"><label>Descricao</label>
+      <input id="doc-desc" placeholder="Ex: Passaporte do João, validade 2030"/>
+    </div>
+    <div class="fr full">
+      <label>Foto do documento (opcional)</label>
+      <div class="upload-area" onclick="document.getElementById('inp-doc-foto').click()">
+        <div style="font-size:2rem">&#128247;</div>
+        <div style="color:var(--muted);font-size:.85rem;margin-top:6px">Clique para fotografar ou selecionar</div>
+        <img id="prev-doc-foto" class="upload-prev"/>
+      </div>
+      <input type="file" id="inp-doc-foto" accept="image/*" style="display:none" onchange="previewDocFoto(this)"/>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" id="btn-salvar-doc" onclick="salvarDoc()">Salvar documento</button>
+    <button class="btn-cancel" onclick="fecharModal('m-doc')">Cancelar</button>
+  </div>
+</div></div>
+
 <!-- MODAL EDITAR VIAGEM -->
 <div class="modal-bg" id="m-editar-viagem"><div class="modal">
   <button class="modal-x" onclick="fecharModal('m-editar-viagem')">&#215;</button>
@@ -652,6 +728,22 @@ table tbody tr:hover td{background:#F7F9FF}
   <div class="modal-actions">
     <button class="btn-ok" onclick="salvarEdicaoViagem()">Salvar alteracoes</button>
     <button class="btn-cancel" onclick="fecharModal('m-editar-viagem')">Cancelar</button>
+  </div>
+</div></div>
+
+<!-- MODAL EDITAR APELIDO -->
+<div class="modal-bg" id="m-apelido"><div class="modal" style="max-width:400px">
+  <button class="modal-x" onclick="fecharModal('m-apelido')">&#215;</button>
+  <h3>&#9998; Editar nome na viagem</h3>
+  <p style="color:var(--muted);font-size:.82rem;margin-bottom:16px;margin-top:-10px">Como esta pessoa sera chamada nesta viagem. Nao altera o nome da conta.</p>
+  <input type="hidden" id="apelido-part-id"/>
+  <div class="fr" style="margin-bottom:16px">
+    <label>Nome / Apelido</label>
+    <input id="apelido-valor" placeholder="Ex: Junior, Ana Julia, Vovo..."/>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarApelido()">Salvar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-apelido')">Cancelar</button>
   </div>
 </div></div>
 
@@ -1009,7 +1101,7 @@ function abrirViagem(v){
   var img=gi('dh-img');
   if(VA.capa_url){img.src=VA.capa_url;img.style.display='block';}
   else{img.src='';img.style.display='none';}
-  sb.from('viagem_participantes').select('id,user_id,role,sem_acesso,nome_externo,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(res){
+  sb.from('viagem_participantes').select('id,user_id,role,sem_acesso,nome_externo,apelido,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(res){
     PARTS=res.data||[];
     sb.from('convites_pendentes').select('*').eq('viagem_id',VA.id).eq('aceito',false).then(function(cr){
       CONVITES=cr.data||[];
@@ -1020,7 +1112,7 @@ function abrirViagem(v){
       var conts=document.querySelectorAll('.tab-conteudo');
       for(var i=0;i<tabs.length;i++) tabs[i].classList.toggle('ativa',i===0);
       for(var i=0;i<conts.length;i++) conts[i].classList.toggle('ativo',i===0);
-      renderVoos();renderHosp();renderParques();renderOrc();renderCheck();renderPart();
+      renderVoos();renderHosp();renderParques();renderOrc();renderCheck();renderPart();renderDocs();
       irPara('detalhe');
     });
   });
@@ -1249,12 +1341,17 @@ function renderPart(){
       var av=document.createElement('div'); av.className='part-av';
       av.style.background='#94A3B8'; av.innerHTML='&#128100;';
       var info=document.createElement('div');
-      var nm=document.createElement('div'); nm.className='part-nome'; nm.textContent=p.nome_externo||'Sem nome';
+      var nomeExtExib = p.apelido || p.nome_externo || 'Sem nome';
+      var nm=document.createElement('div'); nm.className='part-nome'; nm.textContent=nomeExtExib;
       var rl=document.createElement('div'); rl.className='part-role';
       rl.innerHTML='<span style="background:#F1F5F9;color:#64748B;padding:1px 6px;border-radius:8px;font-size:.68rem;font-weight:700">Sem acesso</span>';
       info.appendChild(nm); info.appendChild(rl);
       chip.appendChild(av); chip.appendChild(info);
       if(podeGerenciar()){
+        var ed2=document.createElement('button'); ed2.className='btn-ico edit';
+        ed2.innerHTML='&#9998;'; ed2.title='Editar nome';
+        ed2.onclick=(function(pid,na){return function(e){e.stopPropagation();abrirEditarApelido(pid,na);};})(p.id,nomeExtExib);
+        chip.appendChild(ed2);
         var rm=document.createElement('button'); rm.className='btn-rm'; rm.innerHTML='&times;';
         rm.onclick=(function(pid){return function(){removerPartById(pid);};})(p.id);
         chip.appendChild(rm);
@@ -1268,10 +1365,18 @@ function renderPart(){
     var av=document.createElement('div'); av.className='part-av';
     av.style.background=corAv(u.id); av.textContent=ini(u.nome);
     var info=document.createElement('div');
-    var nm=document.createElement('div'); nm.className='part-nome'; nm.textContent=u.nome;
+    var nomeExib = p.apelido || u.nome;
+    var nm=document.createElement('div'); nm.className='part-nome'; nm.textContent=nomeExib;
     var rl=document.createElement('div'); rl.className='part-role'; rl.textContent=lbls[p.role]||p.role;
     info.appendChild(nm); info.appendChild(rl);
     chip.appendChild(av); chip.appendChild(info);
+    // botão editar apelido: admin pode editar qualquer um, membro só o próprio
+    if(podeGerenciar() || p.user_id===ME.id){
+      var ed=document.createElement('button'); ed.className='btn-ico edit';
+      ed.innerHTML='&#9998;'; ed.title='Editar nome na viagem';
+      ed.onclick=(function(pid,na){return function(e){e.stopPropagation();abrirEditarApelido(pid,na);};})(p.id,nomeExib);
+      chip.appendChild(ed);
+    }
     if(podeGerenciar()&&p.user_id!==ME.id){
       var rm=document.createElement('button'); rm.className='btn-rm'; rm.innerHTML='&times;';
       rm.onclick=(function(uid){return function(){removerPart(uid);};})(p.user_id);
@@ -1376,7 +1481,7 @@ function enviarConvite(){
 }
 
 function recarregarParts(){
-  sb.from('viagem_participantes').select('id,user_id,role,sem_acesso,nome_externo,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(r){
+  sb.from('viagem_participantes').select('id,user_id,role,sem_acesso,nome_externo,apelido,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(r){
     PARTS=r.data||[];
     sb.from('convites_pendentes').select('*').eq('viagem_id',VA.id).eq('aceito',false).then(function(cv){
       CONVITES=cv.data||[];
@@ -1493,6 +1598,156 @@ function imprimir(secao){
     var ativas=document.querySelectorAll('.tab-conteudo.ativo');
     for(var i=0;i<ativas.length;i++) ativas[i].style.display='block';
   },150);
+}
+
+// ── DOCUMENTOS ──
+var _docFotoFile = null;
+
+function previewDocFoto(inp){
+  _docFotoFile = inp.files[0]; if(!_docFotoFile) return;
+  var r=new FileReader();
+  r.onload=function(e){
+    var p=gi('prev-doc-foto'); p.src=e.target.result; p.style.display='block';
+  };
+  r.readAsDataURL(_docFotoFile);
+}
+
+function abrirModalDoc(){
+  _docFotoFile=null;
+  gi('prev-doc-foto').style.display='none';
+  gi('doc-numero').value='';
+  gi('doc-desc').value='';
+  gi('inp-doc-foto').value='';
+  // popular titular com participantes da viagem
+  var sel=gi('doc-titular'); sel.innerHTML='';
+  PARTS.forEach(function(p){
+    var nome = p.apelido || (p.profiles?p.profiles.nome:p.nome_externo)||'?';
+    var opt=document.createElement('option');
+    opt.value=p.id; opt.textContent=nome;
+    sel.appendChild(opt);
+  });
+  abrirModal('m-doc');
+}
+
+function salvarDoc(){
+  var titularId=gi('doc-titular').value;
+  var tipo=gi('doc-tipo').value;
+  var desc=gi('doc-desc').value.trim();
+  var numero=gi('doc-numero').value.trim();
+  if(!tipo){toast('Tipo e obrigatorio','err');return;}
+  var btn=gi('btn-salvar-doc'); btn.disabled=true; btn.textContent='Salvando...';
+
+  function inserirDoc(fotoUrl){
+    sb.from('documentos').insert({
+      viagem_id:VA.id,
+      titular_id:titularId||null,
+      tipo:tipo, descricao:desc, numero:numero,
+      foto_url:fotoUrl||null
+    }).then(function(res){
+      btn.disabled=false; btn.textContent='Salvar documento';
+      if(res.error){toast('Erro: '+res.error.message,'err');return;}
+      fecharModal('m-doc');
+      renderDocs();
+      toast('Documento salvo!','ok');
+    });
+  }
+
+  if(_docFotoFile){
+    var path=VA.id+'/docs/'+Date.now()+'-'+_docFotoFile.name;
+    sb.storage.from('documentos').upload(path,_docFotoFile,{upsert:true}).then(function(res){
+      if(res.error){inserirDoc(null);return;}
+      var pub=sb.storage.from('documentos').getPublicUrl(path);
+      inserirDoc(pub.data.publicUrl);
+    });
+  } else {
+    inserirDoc(null);
+  }
+}
+
+function renderDocs(){
+  var lista=gi('lista-docs'); lista.innerHTML='';
+  sb.from('documentos').select('*, viagem_participantes(id,apelido,nome_externo,profiles(nome))')
+    .eq('viagem_id',VA.id).order('criado_em').then(function(res){
+    var docs=res.data||[];
+    if(!docs.length){
+      var div=document.createElement('div'); div.className='vazio';
+      div.innerHTML='<div class="vazio-icone">&#128196;</div>Nenhum documento cadastrado.';
+      lista.appendChild(div); return;
+    }
+    // icones por tipo
+    var icones={Passaporte:'&#127758;',RG:'&#127994;',CNH:'&#128663;',
+      Visto:'&#128204;','Seguro viagem':'&#128274;',Reserva:'&#128203;',Outro:'&#128196;'};
+    docs.forEach(function(d){
+      var card=document.createElement('div'); card.className='doc-card';
+      // foto ou icone
+      var fotoDiv=document.createElement('div'); fotoDiv.className='doc-foto';
+      if(d.foto_url){
+        var img=document.createElement('img'); img.src=d.foto_url;
+        img.onclick=(function(url){return function(){abrirLightbox(url);};})(d.foto_url);
+        fotoDiv.appendChild(img);
+      } else {
+        fotoDiv.innerHTML=icones[d.tipo]||'&#128196;';
+      }
+      // info
+      var info=document.createElement('div'); info.className='doc-info';
+      var tipo=document.createElement('div'); tipo.className='doc-tipo'; tipo.textContent=d.tipo;
+      var nome=document.createElement('div'); nome.className='doc-nome';
+      nome.textContent=d.descricao||(d.tipo+(d.numero?' - '+d.numero:''));
+      var detalhe=document.createElement('div'); detalhe.className='doc-detalhe';
+      if(d.numero) detalhe.textContent='Num: '+d.numero;
+      info.appendChild(tipo); info.appendChild(nome); info.appendChild(detalhe);
+      // titular
+      var acoes=document.createElement('div'); acoes.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:6px';
+      if(d.viagem_participantes){
+        var vp=d.viagem_participantes;
+        var nomeT=vp.apelido||(vp.profiles?vp.profiles.nome:vp.nome_externo)||'—';
+        var tag=document.createElement('span'); tag.className='doc-titular'; tag.textContent=nomeT;
+        acoes.appendChild(tag);
+      }
+      if(podeGerenciar()){
+        var del=document.createElement('button'); del.className='btn-ico del';
+        del.innerHTML='&#128465;';
+        del.onclick=(function(id){return function(){delDoc(id);};})(d.id);
+        acoes.appendChild(del);
+      }
+      card.appendChild(fotoDiv); card.appendChild(info); card.appendChild(acoes);
+      lista.appendChild(card);
+    });
+  });
+}
+
+function delDoc(id){
+  if(!confirm('Remover este documento?')) return;
+  sb.from('documentos').delete().eq('id',id).then(function(){
+    renderDocs(); toast('Documento removido','info');
+  });
+}
+
+function abrirLightbox(url){
+  gi('lightbox-img').src=url;
+  gi('lightbox').classList.add('aberto');
+}
+function fecharLightbox(){
+  gi('lightbox').classList.remove('aberto');
+  gi('lightbox-img').src='';
+}
+
+// ── APELIDO ──
+function abrirEditarApelido(partId, nomeAtual){
+  gi('apelido-part-id').value=partId;
+  gi('apelido-valor').value=nomeAtual||'';
+  abrirModal('m-apelido');
+}
+function salvarApelido(){
+  var id=gi('apelido-part-id').value;
+  var apelido=gi('apelido-valor').value.trim();
+  if(!apelido){toast('Digite um nome','err');return;}
+  sb.from('viagem_participantes').update({apelido:apelido}).eq('id',id).then(function(res){
+    if(res.error){toast('Erro: '+res.error.message,'err');return;}
+    fecharModal('m-apelido');
+    recarregarParts();
+    toast('Nome atualizado!','ok');
+  });
 }
 
 // ── ABAS MODAL PARTICIPANTES ──
