@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>TripMate</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --azul:#1A3A8F;--azul2:#2952CC;--verde:#0FAB7A;--laranja:#F97316;
+  --roxo:#7C3AED;--amarelo:#FACC15;--rosa:#F472B6;
+  --bg:#F0F5FF;--branco:#FFFFFF;--texto:#1E2A45;--muted:#6B7A99;
+  --borda:#D5E0F5;--r:14px;--sh:0 4px 24px rgba(26,58,143,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--texto);min-height:100vh}
+.tela{display:none}.tela.ativa{display:block}
+#tela-login{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#1A3A8F 0%,#2952CC 45%,#0FAB7A 100%);
+  position:relative;overflow:hidden}
+.confetes{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.confete{position:absolute;border-radius:3px;animation:cair linear infinite}
+@keyframes cair{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+.login-box{background:#fff;border-radius:24px;padding:44px 40px;width:390px;
+  position:relative;z-index:2;box-shadow:0 24px 64px rgba(0,0,0,.28)}
+.login-logo{font-size:2.2rem;font-weight:900;color:var(--azul);letter-spacing:-1px;
+  text-align:center;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px}
+.login-sub{text-align:center;color:var(--muted);font-size:.875rem;margin-bottom:28px}
+.campo-label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);
+  margin-bottom:5px;margin-top:14px;text-transform:uppercase;letter-spacing:.5px}
+.campo-input{width:100%;padding:12px 14px;border:1.5px solid var(--borda);border-radius:10px;
+  font-size:.95rem;font-family:inherit;outline:none}
+.campo-input:focus{border-color:var(--azul2)}
+.btn-entrar{width:100%;background:linear-gradient(135deg,var(--azul),var(--azul2));color:#fff;
+  border:none;padding:14px;border-radius:12px;font-size:1.05rem;font-weight:800;cursor:pointer;
+  margin-top:22px;box-shadow:0 4px 16px rgba(41,82,204,.35)}
+.login-dica{text-align:center;font-size:.75rem;color:var(--muted);margin-top:16px;
+  background:var(--bg);border-radius:10px;padding:10px 12px;line-height:1.7}
+.msg-erro{background:#FEE2E2;color:#991B1B;padding:10px 14px;
+  border-radius:8px;font-size:.85rem;margin-bottom:8px;display:none}
+#app-header{background:linear-gradient(90deg,var(--azul),var(--azul2));padding:0 28px;
+  height:62px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(26,58,143,.25)}
+.logo{font-size:1.4rem;font-weight:900;color:var(--amarelo);
+  display:flex;align-items:center;gap:8px;cursor:pointer;letter-spacing:-.5px}
+.nav-user{display:flex;align-items:center;gap:10px}
+.nav-nome{color:rgba(255,255,255,.85);font-size:.85rem;font-weight:500}
+.badge-papel{font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:20px}
+.bp-sysadmin{background:var(--amarelo);color:#3a2c00}
+.bp-membro{background:rgba(255,255,255,.2);color:#fff}
+.btn-header{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
+  color:#fff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:.8rem;font-family:inherit}
+.btn-header:hover{background:rgba(255,255,255,.22)}
+.conteudo{max-width:1080px;margin:0 auto;padding:32px 20px}
+.card{background:var(--branco);border-radius:var(--r);padding:24px;box-shadow:var(--sh);margin-bottom:22px}
+.card-titulo{font-size:1.1rem;font-weight:800;color:var(--azul);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-sub{font-size:.8rem;color:var(--muted);margin-bottom:14px;margin-top:-10px}
+.grid-viagens{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-bottom:28px}
+.viagem-card{background:var(--branco);border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--sh);cursor:pointer;transition:transform .15s,box-shadow .15s}
+.viagem-card:hover{transform:translateY(-5px);box-shadow:0 12px 36px rgba(26,58,143,.16)}
+.vc-capa{height:120px;position:relative;overflow:hidden}
+.vc-capa img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vc-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent)}
+.vc-pessoas{position:absolute;top:10px;right:10px;z-index:1;
+  background:rgba(255,255,255,.9);border-radius:20px;padding:3px 10px;
+  font-size:.72rem;font-weight:700;color:var(--azul)}
+.vc-body{padding:16px}
+.vc-nome{font-size:1.05rem;font-weight:800;color:var(--azul);margin-bottom:4px}
+.vc-dest{font-size:.85rem;font-weight:600;color:var(--laranja);margin-bottom:6px}
+.vc-datas{font-size:.78rem;color:var(--muted)}
+.vc-role{display:inline-block;margin-top:8px;font-size:.7rem;font-weight:700;
+  padding:2px 8px;border-radius:12px;background:var(--bg);color:var(--azul)}
+.detalhe-header{border-radius:var(--r);overflow:hidden;margin-bottom:22px;
+  box-shadow:var(--sh);position:relative;min-height:180px;
+  display:flex;flex-direction:column;justify-content:flex-end}
+.dh-bg{position:absolute;inset:0;background:linear-gradient(135deg,var(--azul) 0%,var(--azul2) 60%,var(--verde) 130%)}
+.dh-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.dh-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,20,60,.82) 0%,rgba(10,20,60,.3) 60%,transparent 100%)}
+.dh-body{position:relative;z-index:2;padding:28px;display:flex;align-items:flex-end;
+  justify-content:space-between;flex-wrap:wrap;gap:12px}
+.dh-eyebrow{font-size:.72rem;font-weight:700;color:var(--amarelo);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.dh-nome{font-size:2rem;font-weight:900;color:#fff;margin-bottom:4px;line-height:1.1}
+.dh-dest{font-size:1rem;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:4px}
+.dh-datas{font-size:.85rem;color:rgba(255,255,255,.65)}
+.dh-acoes{display:flex;gap:8px;flex-wrap:wrap}
+.btn-dh{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+  color:#fff;padding:8px 16px;border-radius:9px;cursor:pointer;font-size:.82rem;
+  font-family:inherit;font-weight:600;white-space:nowrap}
+.btn-dh:hover{background:rgba(255,255,255,.25)}
+.btn-dh.am{background:var(--amarelo);color:var(--azul);border-color:var(--amarelo)}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:20px;
+  background:var(--branco);border-radius:14px;padding:6px;box-shadow:var(--sh)}
+.tab{padding:9px 16px;border-radius:10px;border:none;background:transparent;
+  font-size:.83rem;font-weight:600;color:var(--muted);cursor:pointer;
+  transition:all .15s;white-space:nowrap;font-family:inherit}
+.tab.ativa{color:#fff}
+.tab[data-cor="laranja"].ativa{background:var(--laranja)}
+.tab[data-cor="verde"].ativa{background:var(--verde)}
+.tab[data-cor="roxo"].ativa{background:var(--roxo)}
+.tab[data-cor="azul"].ativa{background:var(--azul2)}
+.tab[data-cor="amarelo"].ativa{background:#D97706}
+.tab[data-cor="muted"].ativa{background:var(--azul)}
+.tab:hover:not(.ativa){background:var(--bg)}
+.tab-conteudo{display:none}.tab-conteudo.ativo{display:block}
+.tabela-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--borda)}
+table{width:100%;border-collapse:collapse}
+table th{background:var(--azul);color:#fff;text-align:left;padding:10px 14px;font-size:.78rem;font-weight:600}
+table td{padding:10px 14px;border-bottom:1px solid var(--borda);font-size:.85rem}
+table tr:last-child td{border-bottom:none}
+table tbody tr:hover td{background:#F7F9FF}
+.btn-ico{background:none;border:none;cursor:pointer;padding:4px 6px;
+  border-radius:6px;font-size:1rem;line-height:1}
+.btn-ico.del:hover{background:#FEE2E2}
+.secao-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.btn-add{display:inline-flex;align-items:center;gap:6px;border:none;
+  padding:9px 18px;border-radius:10px;font-weight:700;cursor:pointer;
+  font-size:.83rem;font-family:inherit;transition:filter .15s}
+.btn-add.laranja{background:var(--laranja);color:#fff}
+.btn-add.verde{background:var(--verde);color:#fff}
+.btn-add.roxo{background:var(--roxo);color:#fff}
+.btn-add.azul{background:var(--azul2);color:#fff}
+.btn-add.amarelo{background:var(--amarelo);color:var(--azul)}
+.btn-add:hover{filter:brightness(1.08)}
+.checklist-item{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--borda)}
+.checklist-item:last-child{border-bottom:none}
+.check-box{width:24px;height:24px;border-radius:7px;border:2.5px solid var(--borda);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all .15s;flex-shrink:0;font-size:.85rem}
+.check-box.marcado{background:var(--verde);border-color:var(--verde);color:#fff}
+.checklist-item.concluido .check-texto{text-decoration:line-through;color:var(--muted)}
+.check-texto{flex:1;font-size:.9rem}.check-resp{font-size:.75rem;color:var(--muted);white-space:nowrap}
+.orc-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:22px}
+.orc-card{border-radius:12px;padding:16px 18px;background:var(--bg)}
+.orc-label{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.orc-val{font-size:1.5rem;font-weight:900;color:var(--azul)}
+.orc-card.dest{background:linear-gradient(135deg,var(--azul),var(--azul2))}
+.orc-card.dest .orc-label,.orc-card.dest .orc-val{color:#fff}
+.part-grid{display:flex;flex-wrap:wrap;gap:10px}
+.part-chip{display:flex;align-items:center;gap:9px;background:var(--bg);
+  border-radius:30px;padding:8px 14px 8px 8px}
+.part-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.85rem;font-weight:800;color:#fff;flex-shrink:0}
+.part-nome{font-weight:600;font-size:.85rem}.part-role{font-size:.7rem;color:var(--muted)}
+.btn-rm{background:none;border:none;cursor:pointer;color:#EF4444;font-size:1rem;padding:0 0 0 4px}
+.u-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--borda)}
+.u-row:last-child{border-bottom:none}
+.u-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:1rem;font-weight:800;color:#fff;flex-shrink:0}
+.u-info{flex:1}.u-nome{font-weight:600;font-size:.9rem}.u-email{font-size:.78rem;color:var(--muted)}
+.badge{font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px}
+.b-sys{background:#FEF3C7;color:#92400E}.b-mem{background:#DBEAFE;color:#1E40AF}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(10,20,60,.5);
+  z-index:200;align-items:center;justify-content:center}
+.modal-bg.aberto{display:flex}
+.modal{background:#fff;border-radius:20px;padding:32px;width:520px;
+  max-width:95vw;max-height:92vh;overflow-y:auto;position:relative}
+.modal h3{font-size:1.25rem;font-weight:800;color:var(--azul);margin-bottom:20px}
+.modal-x{position:absolute;top:16px;right:18px;background:none;border:none;
+  font-size:1.5rem;cursor:pointer;color:var(--muted)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg .full{grid-column:1/-1}
+.fr{display:flex;flex-direction:column;gap:5px}
+.fr label{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.fr input,.fr select,.fr textarea{padding:10px 12px;border:1.5px solid var(--borda);border-radius:9px;
+  font-size:.9rem;font-family:inherit;outline:none}
+.fr input:focus,.fr select:focus,.fr textarea:focus{border-color:var(--azul2)}
+.fr textarea{resize:vertical;min-height:68px}
+.modal-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.btn-ok{background:var(--azul);color:#fff;border:none;padding:11px 24px;
+  border-radius:10px;font-weight:700;cursor:pointer;font-size:.9rem;font-family:inherit}
+.btn-ok:hover{background:var(--azul2)}
+.btn-cancel{background:var(--bg);color:var(--muted);border:none;padding:11px 18px;
+  border-radius:10px;font-weight:600;cursor:pointer;font-size:.9rem;font-family:inherit}
+.upload-area{border:2px dashed var(--borda);border-radius:12px;padding:22px;
+  text-align:center;cursor:pointer;background:var(--bg)}
+.upload-area:hover{border-color:var(--azul2);background:#EEF3FF}
+.upload-prev{width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-top:12px;display:none}
+#toast{position:fixed;bottom:26px;right:26px;z-index:999;color:#fff;
+  padding:12px 22px;border-radius:12px;font-size:.9rem;font-weight:600;
+  transform:translateY(80px);opacity:0;transition:all .3s;
+  box-shadow:0 8px 24px rgba(0,0,0,.2);pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.ok{background:var(--verde)}
+#toast.err{background:#EF4444}
+#toast.info{background:var(--azul2)}
+.flex{display:flex;align-items:center;gap:8px}.ml-auto{margin-left:auto}
+.vazio{text-align:center;padding:40px 20px;color:var(--muted);font-size:.9rem}
+.vazio-icone{font-size:2.8rem;margin-bottom:8px}
+.sep{height:1px;background:var(--borda);margin:16px 0}
+  border-radius:10px;padding:10px 16px;font-size:.8rem;color:#92400E;margin-bottom:20px}
+.tag-auto{font-size:.68rem;background:#E0F2FE;color:#0369A1;padding:1px 6px;
+  border-radius:10px;font-weight:700;margin-left:4px;vertical-align:middle}
+@media print{
+  /* ocultar TUDO exceto o conteudo de impressao */
+  body > *{ display:none!important; }
+  #print-report{ display:block!important; }
+
+  #print-report{
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #1A2440;
+    padding: 0;
+    margin: 0;
+  }
+  .pr-header{
+    border-bottom: 3px solid #1B2E6B;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+  }
+  .pr-titulo{ font-size: 22pt; font-weight: 900; color: #1B2E6B; }
+  .pr-sub{ font-size: 11pt; color: #6B7A99; margin-top: 4px; }
+  .pr-secao{
+    margin-bottom: 24px;
+    break-inside: avoid;
+  }
+  .pr-secao-titulo{
+    font-size: 13pt; font-weight: 800; color: #1B2E6B;
+    border-bottom: 1px solid #D5E0F5;
+    padding-bottom: 6px; margin-bottom: 10px;
+  }
+  .pr-vazio{ color: #6B7A99; font-size: 10pt; font-style: italic; }
+  .pr-table{ width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+  .pr-table th{
+    background: #F0F4FF; color: #1B2E6B; font-weight: 700;
+    padding: 6px 8px; text-align: left; border: 1px solid #D5E0F5;
+  }
+  .pr-table td{
+    padding: 5px 8px; border: 1px solid #D5E0F5; vertical-align: top;
+  }
+  .pr-table tr:nth-child(even) td{ background: #F8FAFF; }
+  .pr-check-item{ display:flex; gap:8px; padding:4px 0; font-size:10pt; }
+  .pr-check-box{ width:14px; height:14px; border:1.5px solid #1B2E6B; display:inline-block; flex-shrink:0; margin-top:2px; }
+  .pr-check-ok{ background:#0FAB7A; border-color:#0FAB7A; }
+  .pr-orc-card{ display:inline-block; border:1px solid #D5E0F5; border-radius:8px; padding:8px 16px; margin:4px; }
+  .pr-orc-label{ font-size:8.5pt; color:#6B7A99; }
+  .pr-orc-val{ font-size:13pt; font-weight:800; color:#1B2E6B; }
+  .pr-orc-dest .pr-orc-val{ color:#C9A84C; }
+  .pr-footer{ border-top:1px solid #D5E0F5; padding-top:8px; font-size:8pt; color:#6B7A99; margin-top:32px; }
+}
+/* SECOES VIAGENS */
+.secao-viagens{margin-bottom:28px}
+.secao-viagens-titulo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.secao-viagens-titulo h2{font-size:1.1rem;font-weight:800;color:var(--azul)}
+.badge-count{background:var(--azul);color:#fff;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px}
+.badge-andamento{background:var(--verde)!important}
+.badge-passadas{background:var(--muted)!important}
+.vc-badge-status{position:absolute;top:10px;left:10px;z-index:1;font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:20px}
+.status-andamento{background:var(--verde);color:#fff}
+.status-proxima{background:var(--azul2);color:#fff}
+.status-passada{background:rgba(0,0,0,.45);color:#fff}
+/* CHAT IA */
+.chat-msg{padding:12px 16px;border-radius:14px;font-size:.88rem;line-height:1.5;max-width:85%}
+.chat-ia{background:var(--bg);border:1.5px solid var(--borda);align-self:flex-start;color:var(--texto)}
+.chat-user{background:var(--azul);color:#fff;align-self:flex-end}
+.chat-loading{background:var(--bg);border:1.5px solid var(--borda);align-self:flex-start;color:var(--muted);font-style:italic}
+.chat-ia p{margin:0 0 8px 0}
+.chat-ia p:last-child{margin-bottom:0}
+.chat-ia ul{margin:6px 0 8px 16px;padding:0}
+.chat-ia li{margin-bottom:4px}
+.chat-ia strong{font-weight:700;color:var(--azul)}
+.chat-ia em{font-style:italic}
+/* CARDS ATRACAO */
+.atracao-card{background:var(--bg);border:1px solid var(--borda);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:box-shadow .15s}
+.atracao-card:hover{box-shadow:var(--sh)}
+.atracao-info{flex:1;min-width:0}
+.atracao-nome{font-weight:700;font-size:.88rem;color:var(--azul);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.atracao-tipo{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.atracao-rating{font-size:.78rem;color:#F59E0B;font-weight:600}
+.atracao-end{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* SELETOR PARTICIPANTES */
+.part-check{display:flex;align-items:center;gap:6px;background:var(--bg);border-radius:20px;padding:5px 10px;cursor:pointer;font-size:.82rem;border:1.5px solid transparent;transition:all .15s}
+.part-check.selecionado{background:var(--azul);color:#fff;border-color:var(--azul)}
+.part-check.selecionado .pc-av{background:rgba(255,255,255,.3)}
+.pc-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;flex-shrink:0}
+/* DOCUMENTOS */
+.doc-card{background:var(--bg);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;border:1px solid var(--borda)}
+.doc-foto{width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--borda);display:flex;align-items:center;justify-content:center;font-size:1.5rem;overflow:hidden}
+.doc-foto img{width:100%;height:100%;object-fit:cover;border-radius:10px;cursor:pointer}
+.doc-info{flex:1}
+.doc-tipo{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:2px}
+.doc-nome{font-weight:700;font-size:.95rem;color:var(--azul);margin-bottom:2px}
+.doc-detalhe{font-size:.8rem;color:var(--muted)}
+.doc-titular{font-size:.75rem;background:var(--bg);border:1px solid var(--borda);padding:2px 8px;border-radius:10px;color:var(--azul);font-weight:600}
+/* PAINEL LOGIN ANIMADO */
+.login-painel{
+  flex:1;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#1B2E6B 0%,#2444A8 60%,#C9A84C 130%);
+  display:flex!important;align-items:center;justify-content:center;
+  padding:48px;
+}
+.login-painel-content{position:relative;z-index:2;color:#fff}
+.lp-orb{
+  position:absolute;border-radius:50%;
+  animation:orbFloat 8s ease-in-out infinite;
+  opacity:.15;
+}
+.lp-orb1{
+  width:320px;height:320px;background:radial-gradient(circle,#fff,transparent);
+  top:-80px;left:-80px;animation-delay:0s;
+}
+.lp-orb2{
+  width:200px;height:200px;background:radial-gradient(circle,#C9A84C,transparent);
+  bottom:40px;right:-60px;animation-delay:-3s;
+}
+.lp-orb3{
+  width:150px;height:150px;background:radial-gradient(circle,#0FAB7A,transparent);
+  top:50%;left:60%;animation-delay:-5s;
+}
+@keyframes orbFloat{
+  0%,100%{transform:translate(0,0) scale(1);}
+  33%{transform:translate(20px,-30px) scale(1.05);}
+  66%{transform:translate(-15px,20px) scale(.95);}
+}
+
+/* BUSCA LIVRE */
+#roteiro-local-livre{display:none}
+
+@media(max-width:600px){
+  .login-box{padding:32px 22px;width:calc(100% - 32px)}
+  .fg{grid-template-columns:1fr}
+  #app-header{padding:0 14px}
+  .conteudo{padding:20px 14px}
+  .dh-nome{font-size:1.5rem}
+}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<div id="tela-login" class="tela ativa">
+  <!-- painel esquerdo - desktop -->
+  <div class="login-painel" style="display:none">
+    <div class="lp-orb lp-orb1"></div>
+    <div class="lp-orb lp-orb2"></div>
+    <div class="lp-orb lp-orb3"></div>
+    <div class="login-painel-content">
+      <img src="https://hsuvzlpgzfhfxtjugztz.supabase.co/storage/v1/object/public/assets/WhatsApp%20Image%202026-06-13%20at%2017.53.31.jpeg" style="height:72px;width:72px;object-fit:cover;border-radius:50%;box-shadow:0 4px 24px rgba(0,0,0,.25);margin-bottom:20px"/>
+      <div class="login-painel-titulo">Organize sua<br/>proxima viagem.</div>
+      <div class="login-painel-sub">Seu companheiro no planejamento de viagens. Voos, hospedagem, passeios, orcamento e checklist.</div>
+      <div class="login-painel-items">
+        <div class="login-painel-item"><div class="login-painel-icone">&#9992;</div><span>Voos e hospedagem centralizados</span></div>
+        <div class="login-painel-item"><div class="login-painel-icone">&#128176;</div><span>Orcamento compartilhado em tempo real</span></div>
+        <div class="login-painel-item"><div class="login-painel-icone">&#128101;</div><span>Cada pessoa ve so as viagens dela</span></div>
+        <div class="login-painel-item"><div class="login-painel-icone">&#129504;</div><span>IA integrada para planejar seu roteiro</span></div>
+      </div>
+    </div>
+  </div>
+  <!-- formulario -->
+  <div class="login-box">
+    <div style="text-align:center;margin-bottom:8px"><img src="https://hsuvzlpgzfhfxtjugztz.supabase.co/storage/v1/object/public/assets/WhatsApp%20Image%202026-06-13%20at%2017.53.31.jpeg" style="height:90px;width:90px;object-fit:cover;border-radius:50%;box-shadow:0 4px 20px rgba(27,46,107,.2)"/></div>
+    <div class="login-logo" style="font-size:1.8rem;justify-content:center">TripMate</div>
+    <div class="login-sub">Seu companheiro no planejamento de viagens</div>
+    <div id="login-erro" class="msg-erro"></div>
+    <label class="campo-label">E-mail</label>
+    <input class="campo-input" id="le" type="email" placeholder="seu@email.com"/>
+    <label class="campo-label">Senha</label>
+    <input class="campo-input" id="ls" type="password" placeholder="......"/>
+    <button class="btn-entrar" id="btn-login-entrar" onclick="fazerLogin()">Entrar</button>
+    <button class="btn-entrar" onclick="abrirModal('m-cadastro')" style="background:transparent;border:2px solid var(--azul);color:var(--azul);margin-top:12px;box-shadow:none">Criar conta</button>
+    <div class="login-dica" style="font-size:.78rem;color:var(--muted)">Primeira vez? Clique em <strong>Criar conta</strong>.</div>
+  </div>
+</div>
+
+<div id="tela-app" class="tela">
+<header id="app-header">
+  <div class="logo" onclick="irPara('viagens')" style="gap:10px"><img src="https://hsuvzlpgzfhfxtjugztz.supabase.co/storage/v1/object/public/assets/WhatsApp%20Image%202026-06-13%20at%2017.53.31.jpeg" style="height:38px;width:38px;object-fit:cover;border-radius:50%;border:2px solid var(--amarelo)"/> TripMate</div>
+  <div class="nav-user">
+    <span class="nav-nome" id="hn"></span>
+    <span class="badge-papel" id="hb"></span>
+    <button class="btn-header" id="btn-nav-sys" style="display:none" onclick="irPara('usuarios')">&#128101; Usuarios</button>
+    <button class="btn-header" onclick="sair()">Sair</button>
+  </div>
+</header>
+
+<div id="tela-viagens" class="tela ativa">
+  <div class="conteudo">
+    <div class="flex" style="margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h1 style="font-size:1.9rem;font-weight:900;color:var(--azul)">Minhas viagens</h1>
+        <p style="color:var(--muted);font-size:.875rem;margin-top:2px">Clique em uma viagem para ver os detalhes</p>
+      </div>
+      <div class="ml-auto flex" style="gap:8px;flex-wrap:wrap">
+        <button id="btn-toggle-passadas" class="btn-cancel" style="border-radius:10px;font-size:.83rem" onclick="togglePassadas()">&#128444; Ver passadas</button>
+        <button id="btn-gestao" class="btn-add azul" style="display:none" onclick="irPara('gestao')">&#9881; Gestao</button>
+        <button class="btn-add laranja" onclick="abrirModalNovaViagem()">+ Nova viagem</button>
+      </div>
+    </div>
+    <div class="grid-viagens" id="grid-viagens"></div>
+  </div>
+</div>
+
+<div id="tela-detalhe" class="tela">
+  <div class="conteudo">
+    <div class="detalhe-header">
+      <div class="dh-bg" id="dh-bg"><img id="dh-img" src="" style="display:none"/></div>
+      <div class="dh-overlay"></div>
+      <div class="dh-body">
+        <div>
+          <div class="dh-eyebrow">Viagem</div>
+          <div class="dh-nome" id="dh-nome"></div>
+          <div class="dh-dest" id="dh-dest"></div>
+          <div class="dh-datas" id="dh-datas"></div>
+        </div>
+        <div class="dh-acoes">
+          <button class="btn-dh am" id="btn-upload-capa" onclick="document.getElementById('inp-capa').click()">&#128247; Imagem</button>
+          <input type="file" id="inp-capa" accept="image/*" style="display:none" onchange="uploadCapa(this)"/>
+          <button class="btn-dh" id="btn-editar-viagem" onclick="abrirEditarViagem()">&#9998; Editar</button>
+          <button class="btn-dh" onclick="abrirModal('m-print')">&#128424; Imprimir</button>
+          <button class="btn-dh" onclick="irPara('viagens')">&larr; Voltar</button>
+        </div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab ativa" data-cor="laranja" onclick="ativarTab('voos',this)">&#9992; Voos</button>
+      <button class="tab" data-cor="verde"   onclick="ativarTab('hospedagem',this)">&#127968; Hospedagem</button>
+      <button class="tab" data-cor="roxo"    onclick="ativarTab('parques',this)">&#127914; Passeios</button>
+      <button class="tab" data-cor="azul"    onclick="ativarTab('orcamento',this)">&#128176; Orcamento</button>
+      <button class="tab" data-cor="amarelo" onclick="ativarTab('checklist',this)">&#10003; Checklist</button>
+      <button class="tab" data-cor="muted"   onclick="ativarTab('participantes',this)">&#128101; Participantes</button>
+      <button class="tab" data-cor="verde"   onclick="ativarTab('documentos',this)">&#128196; Documentos</button>
+      <button class="tab" data-cor="roxo"    onclick="ativarTab('roteiro',this)">&#129504; IA & Roteiro</button>
+    </div>
+    <div id="tab-voos" class="tab-conteudo ativo"><div class="card">
+      <div class="secao-toolbar"><div class="card-titulo">&#9992; Voos</div>
+        <button class="btn-add laranja" onclick="abrirModalVoo()">+ Adicionar voo</button></div>
+      <div class="tabela-wrap"><table><thead><tr>
+        <th>Companhia</th><th>No.</th><th>Trecho</th><th>Partida</th><th>Chegada</th>
+        <th>Localizador</th><th>Valor</th><th>Passageiros</th><th></th>
+      </tr></thead><tbody id="tb-voos"></tbody></table></div>
+    </div></div>
+    <div id="tab-hospedagem" class="tab-conteudo"><div class="card">
+      <div class="secao-toolbar"><div class="card-titulo">&#127968; Hospedagem</div>
+        <button class="btn-add verde" onclick="abrirModalHosp()">+ Adicionar</button></div>
+      <div class="tabela-wrap"><table><thead><tr>
+        <th>Local</th><th>Endereco</th><th>Check-in</th><th>Check-out</th>
+        <th>Localizador</th><th>Valor</th><th>Obs</th><th></th>
+      </tr></thead><tbody id="tb-hosp"></tbody></table></div>
+    </div></div>
+    <div id="tab-parques" class="tab-conteudo"><div class="card">
+      <div class="secao-toolbar"><div class="card-titulo">&#127914; Passeios e Ingressos</div>
+        <button class="btn-add roxo" onclick="abrirModalParque()">+ Adicionar</button></div>
+      <div class="tabela-wrap"><table><thead><tr>
+        <th>Local / Atracao</th><th>Data</th><th>Tipo</th><th>Qtd</th><th>Valor</th><th>Obs</th><th></th>
+      </tr></thead><tbody id="tb-parques"></tbody></table></div>
+    </div></div>
+    <div id="tab-orcamento" class="tab-conteudo">
+      <div class="card"><div class="orc-cards" id="orc-cards"></div></div>
+      <div class="card">
+        <div class="secao-toolbar"><div class="card-titulo">&#128279; Vinculadas (voos, hotel, passeios)</div></div>
+        <p class="card-sub">Geradas automaticamente. Para remover, exclua o item de origem.</p>
+        <div class="tabela-wrap"><table><thead><tr>
+          <th>Descricao</th><th>Categoria</th><th>Data</th><th>Valor</th><th></th>
+        </tr></thead><tbody id="tb-desp-auto"></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="secao-toolbar">
+          <div class="card-titulo">&#128203; Gastos avulsos</div>
+          <button class="btn-add azul" onclick="abrirModal('m-despesa')">+ Adicionar gasto</button>
+        </div>
+        <p class="card-sub">Seguro, aluguel de carro, chip, compras e qualquer outro gasto livre.</p>
+        <div class="tabela-wrap"><table><thead><tr>
+          <th>Descricao</th><th>Categoria</th><th>Data</th><th>Pago por</th><th>Obs</th><th>Valor</th><th></th>
+        </tr></thead><tbody id="tb-desp-livre"></tbody></table></div>
+      </div>
+    </div>
+    <div id="tab-checklist" class="tab-conteudo"><div class="card">
+      <div class="secao-toolbar"><div class="card-titulo">&#10003; Lista de tarefas</div>
+        <button class="btn-add amarelo" style="color:var(--azul)" onclick="abrirModal('m-item')">+ Adicionar item</button></div>
+      <div id="lista-check"></div>
+    </div></div>
+    <div id="tab-participantes" class="tab-conteudo"><div class="card">
+      <div class="secao-toolbar"><div class="card-titulo">&#128101; Participantes</div>
+        <button class="btn-add azul" id="btn-add-part" onclick="abrirModalPart()">+ Adicionar</button></div>
+      <div class="part-grid" id="part-grid"></div>
+    </div></div>
+    <!-- DOCUMENTOS -->
+    <div id="tab-documentos" class="tab-conteudo"><div class="card">
+      <div class="secao-toolbar">
+        <div class="card-titulo">&#128196; Documentos</div>
+        <button class="btn-add verde" onclick="abrirModalDoc()">+ Adicionar documento</button>
+      </div>
+      <p class="card-sub">Passaportes, vistos, CNH, RG e comprovantes importantes.</p>
+      <div id="lista-docs"></div>
+    </div></div>
+
+
+    <!-- ROTEIRO IA -->
+    <div id="tab-roteiro" class="tab-conteudo">
+      <!-- busca de atrações -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-titulo">&#128205; Pontos turisticos em <span id="roteiro-destino-nome">--</span></div>
+        <p class="card-sub" style="margin-bottom:14px">Atrações, restaurantes e passeios na regiao do destino da viagem.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          <select id="roteiro-tipo" style="flex:1;padding:9px 12px;border:1.5px solid var(--borda);border-radius:9px;font-size:.88rem;font-family:inherit" onchange="toggleBuscaLivre()">
+            <option value="" selected>-- Categoria --</option>
+            <option value="tourist_attraction">Atrações turísticas</option>
+            <option value="restaurant">Restaurantes</option>
+            <option value="lodging">Hospedagem</option>
+            <option value="shopping_mall">Shopping</option>
+            <option value="park">Parques</option>
+            <option value="museum">Museus</option>
+            <option value="amusement_park">Parques de diversão</option>
+            <option value="livre" style="font-style:italic">🔍 Busca livre</option>
+          </select>
+          <button class="btn-add azul" onclick="buscarAtracoes()" id="btn-buscar-atracoes">&#128269; Buscar</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <input id="roteiro-local" placeholder="Local especifico (opcional) — vazio = busca em {{destino}}" style="flex:1;padding:9px 12px;border:1.5px solid var(--borda);border-radius:9px;font-size:.85rem;font-family:inherit" onkeydown="if(event.key==='Enter') buscarAtracoes()"/>
+          <span id="roteiro-local-label" style="font-size:.75rem;color:var(--muted);align-self:center;white-space:nowrap">opcional</span>
+        </div>
+        <div id="atracoes-toolbar" style="display:none;margin-bottom:10px;gap:8px;flex-wrap:wrap">
+          <input id="filtro-atracao" placeholder="Filtrar por nome..." onkeyup="filtrarAtracoes()" style="flex:1;min-width:180px;padding:8px 12px;border:1.5px solid var(--borda);border-radius:9px;font-size:.85rem;font-family:inherit"/>
+          <span id="atracoes-count" style="color:var(--muted);font-size:.82rem;align-self:center"></span>
+        </div>
+        <div id="grid-atracoes" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div id="btn-mais-wrap" style="display:none;text-align:center;margin-top:12px">
+          <button class="btn-cancel" onclick="maisResultados()" style="border-radius:10px">+ Ver mais resultados</button>
+        </div>
+      </div>
+      <!-- chat IA -->
+      <div class="card">
+        <div class="card-titulo">&#129504; Assistente de viagem</div>
+        <p class="card-sub" style="margin-bottom:14px">Pergunte qualquer coisa sobre sua viagem. O assistente ja conhece seu destino, datas e participantes.</p>
+        <div id="chat-msgs" style="min-height:200px;max-height:400px;overflow-y:auto;border:1.5px solid var(--borda);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;flex-direction:column;gap:12px">
+          <div class="chat-msg chat-ia">Ola! Sou seu assistente de viagem. Ja tenho todas as informacoes da sua viagem. Pode me perguntar sobre roteiros, dicas, o que fazer, quando ir, quanto tempo em cada atracao e muito mais!</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input id="chat-input" placeholder="Ex: Consigo fazer Magic Kingdom e Epcot no mesmo dia?" style="flex:1;padding:11px 14px;border:1.5px solid var(--borda);border-radius:10px;font-size:.88rem;font-family:inherit" onkeydown="if(event.key==='Enter')enviarChat()"/>
+          <button class="btn-add azul" id="btn-chat-send" onclick="enviarChat()" style="padding:11px 18px">&#10148;</button>
+        </div>
+      </div>
+    </div>
+
+<!-- TELA GESTAO -->
+<div id="tela-gestao" class="tela">
+  <div class="conteudo">
+    <div class="flex" style="margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h1 style="font-size:1.9rem;font-weight:900;color:var(--azul)">&#9881; Gestao do sistema</h1>
+        <p style="color:var(--muted);font-size:.875rem;margin-top:2px">Todas as viagens criadas no TripMate</p>
+      </div>
+      <div class="ml-auto">
+        <button class="btn-cancel" style="border-radius:10px" onclick="irPara('viagens')">&larr; Voltar</button>
+      </div>
+    </div>
+    <div class="card"><div id="lista-todas-viagens"></div></div>
+  </div>
+</div>
+
+  </div>
+</div>
+
+<div id="tela-usuarios" class="tela">
+  <div class="conteudo">
+    <div class="flex" style="margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h1 style="font-size:1.9rem;font-weight:900;color:var(--azul)">Usuarios</h1>
+        <p style="color:var(--muted);font-size:.875rem;margin-top:2px">Gerencie os acessos</p>
+      </div>
+      <div class="ml-auto flex" style="gap:10px">
+        <button class="btn-add verde" onclick="abrirModal('m-usuario')">+ Novo usuario</button>
+        <button class="btn-cancel" style="border-radius:10px" onclick="irPara('viagens')">&larr; Voltar</button>
+      </div>
+    </div>
+    <div class="card"><div id="lista-usuarios"></div></div>
+  </div>
+</div>
+</div>
+
+<!-- MODAIS -->
+<div class="modal-bg" id="m-viagem"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-viagem')">&#215;</button>
+  <h3>Nova viagem</h3>
+  <div class="fg">
+    <div class="fr full"><label>Nome da viagem *</label><input id="vn" placeholder="Ex: Ferias na Europa 2026"/></div>
+    <div class="fr full"><label>Destino *</label><input id="vd" placeholder="Ex: Paris, Roma e Lisboa"/></div>
+    <div class="fr"><label>Data de ida</label><input id="vi" type="date"/></div>
+    <div class="fr"><label>Data de volta</label><input id="vv" type="date"/></div>
+    <div class="fr full"><label>Observacoes</label><textarea id="vo" placeholder="Notas gerais..."></textarea></div>
+    <div class="fr full">
+      <label>Imagem de capa (opcional)</label>
+      <div class="upload-area" onclick="document.getElementById('inp-capa-novo').click()">
+        <div style="font-size:2rem">&#128444;</div>
+        <div style="color:var(--muted);font-size:.85rem;margin-top:6px">Clique para selecionar</div>
+        <img id="prev-capa" class="upload-prev"/>
+      </div>
+      <input type="file" id="inp-capa-novo" accept="image/*" style="display:none" onchange="previewCapa(this)"/>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarViagem()">Criar viagem</button>
+    <button class="btn-cancel" onclick="fecharModal('m-viagem')">Cancelar</button>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-voo"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-voo')">&#215;</button>
+  <h3>Adicionar voo</h3>
+  <div class="fg">
+    <div class="fr"><label>Companhia</label><input id="fc" placeholder="LATAM, Gol..."/></div>
+    <div class="fr"><label>No. do voo</label><input id="fn" placeholder="LA8023"/></div>
+    <div class="fr"><label>Origem</label><input id="fo" placeholder="GRU - Sao Paulo"/></div>
+    <div class="fr"><label>Destino</label><input id="fd" placeholder="CDG - Paris"/></div>
+    <div class="fr"><label>Partida</label><input id="fp" type="datetime-local"/></div>
+    <div class="fr"><label>Chegada</label><input id="fch" type="datetime-local"/></div>
+    <div class="fr"><label>Localizador</label><input id="fl" placeholder="ABC123"/></div>
+    <div class="fr"><label>Valor (R$)</label><input id="fv" type="number" min="0" placeholder="0"/></div>
+    <div class="fr full"><label>Passageiros</label>
+      <div id="sel-pass-voo" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1.5px solid var(--borda);border-radius:9px;min-height:44px"></div>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarVoo()">Salvar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-voo')">Cancelar</button>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-hosp"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-hosp')">&#215;</button>
+  <h3>Adicionar hospedagem</h3>
+  <div class="fg">
+    <div class="fr full"><label>Nome do local</label><input id="hn2" placeholder="Hotel, Airbnb..."/></div>
+    <div class="fr full"><label>Endereco</label><input id="he" placeholder="Rua, cidade, pais"/></div>
+    <div class="fr"><label>Check-in</label><input id="hci" type="date"/></div>
+    <div class="fr"><label>Check-out</label><input id="hco" type="date"/></div>
+    <div class="fr"><label>Localizador</label><input id="hl" placeholder="Booking #..."/></div>
+    <div class="fr"><label>Valor (R$)</label><input id="hv" type="number" min="0" placeholder="0"/></div>
+    <div class="fr full"><label>Hospedes</label>
+      <div id="sel-pass-hosp" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1.5px solid var(--borda);border-radius:9px;min-height:44px"></div>
+    </div>
+    <div class="fr full"><label>Observacoes</label><textarea id="ho" placeholder="Cafe incluso..."></textarea></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarHosp()">Salvar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-hosp')">Cancelar</button>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-parque"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-parque')">&#215;</button>
+  <h3>Adicionar passeio / ingresso</h3>
+  <div class="fg">
+    <div class="fr full"><label>Local / Atracao *</label><input id="pn" placeholder="Torre Eiffel..."/></div>
+    <div class="fr"><label>Data</label><input id="pd" type="date"/></div>
+    <div class="fr"><label>Tipo</label><input id="pt" placeholder="Ingresso, excursao..."/></div>
+    <div class="fr"><label>Quantidade</label><input id="pq" type="number" value="1" min="1"/></div>
+    <div class="fr"><label>Valor total (R$)</label><input id="pv" type="number" min="0" placeholder="0"/></div>
+    <div class="fr full"><label>Participantes</label>
+      <div id="sel-pass-parque" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1.5px solid var(--borda);border-radius:9px;min-height:44px"></div>
+    </div>
+    <div class="fr full"><label>Observacoes</label><input id="po" placeholder="Ponto de encontro..."/></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarParque()">Salvar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-parque')">Cancelar</button>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-despesa"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-despesa')">&#215;</button>
+  <h3>Gasto avulso</h3>
+  <p style="color:var(--muted);font-size:.82rem;margin-bottom:16px;margin-top:-10px">Seguro, aluguel de carro, chip, compras e qualquer outro gasto livre.</p>
+  <div class="fg">
+    <div class="fr full"><label>Descricao *</label><input id="dd" placeholder="Ex: Seguro saude, aluguel de carro..."/></div>
+    <div class="fr"><label>Categoria</label>
+      <select id="dc">
+        <option value="">-- selecione --</option>
+        <option value="Seguro saude / viagem">Seguro saude / viagem</option>
+        <option value="Aluguel de carro">Aluguel de carro</option>
+        <option value="Chip / Internet">Chip / Internet</option>
+        <option value="Alimentacao">Alimentacao</option>
+        <option value="Transporte">Transporte</option>
+        <option value="Compras">Compras</option>
+        <option value="Farmacia">Farmacia</option>
+        <option value="Camera / Equipamento">Camera / Equipamento</option>
+        <option value="Gorjeta">Gorjeta</option>
+        <option value="Outros">Outros</option>
+      </select>
+    </div>
+    <div class="fr"><label>Data</label><input id="ddt" type="date"/></div>
+    <div class="fr"><label>Pago por</label><input id="dp" placeholder="Nome de quem pagou"/></div>
+    <div class="fr"><label>Valor (R$) *</label><input id="dv" type="number" min="0" placeholder="0"/></div>
+    <div class="fr full"><label>Observacoes</label><input id="dobs" placeholder="Detalhes opcionais..."/></div>
+  </div>
+
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarDespesa()">Salvar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-despesa')">Cancelar</button>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-item"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-item')">&#215;</button>
+  <h3>Novo item da lista</h3>
+  <div class="fg">
+    <div class="fr full"><label>Descricao *</label><input id="ii" placeholder="Tirar visto, comprar adaptador..."/></div>
+    <div class="fr full"><label>Responsavel</label><input id="ir" placeholder="Quem vai cuidar disso?"/></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarItem()">Salvar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-item')">Cancelar</button>
+  </div>
+</div></div>
+
+<!-- MODAL PARTICIPANTES -->
+<div class="modal-bg" id="m-part"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-part')">&#215;</button>
+  <h3>&#128101; Adicionar participante</h3>
+  <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--bg);border-radius:10px;padding:4px">
+    <button id="tab-convite" onclick="abrirAbaConvite()" style="flex:1;padding:9px;border:none;border-radius:8px;font-weight:700;font-size:.85rem;cursor:pointer;background:var(--azul);color:#fff;font-family:inherit">&#128231; Convidar por e-mail</button>
+    <button id="tab-semacesso" onclick="abrirAbaSemAcesso()" style="flex:1;padding:9px;border:none;border-radius:8px;font-weight:700;font-size:.85rem;cursor:pointer;background:transparent;color:var(--muted);font-family:inherit">&#128100; Adicionar sem acesso</button>
+  </div>
+  <div id="painel-convite">
+    <p style="color:var(--muted);font-size:.82rem;margin-bottom:14px">Digite o e-mail. Se ja tiver conta sera adicionado direto, senao gera link de convite.</p>
+    <div class="fg">
+      <div class="fr full"><label>E-mail *</label><input id="conv-email" type="email" placeholder="email@exemplo.com"/></div>
+      <div class="fr full"><label>Nome (opcional)</label><input id="conv-nome" placeholder="Como chamar a pessoa?"/></div>
+      <div class="fr full"><label>Papel nesta viagem</label>
+        <select id="conv-role"><option value="MEMBRO">Membro</option><option value="TRIP_ADMIN">Admin da viagem</option></select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ok" id="btn-conv-ok" onclick="enviarConvite()">&#128231; Enviar convite</button>
+      <button class="btn-cancel" onclick="fecharModal('m-part')">Cancelar</button>
+    </div>
+  </div>
+  <div id="painel-semacesso" style="display:none">
+    <p style="color:var(--muted);font-size:.82rem;margin-bottom:14px">Para criancas e acompanhantes sem acesso ao sistema.</p>
+    <div class="fg">
+      <div class="fr full"><label>Nome completo *</label><input id="sa-nome" placeholder="Ex: Ana Julia (filha)"/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ok" onclick="adicionarSemAcesso()">&#128100; Adicionar</button>
+      <button class="btn-cancel" onclick="fecharModal('m-part')">Cancelar</button>
+    </div>
+  </div>
+</div></div>
+
+<div class="modal-bg" id="m-usuario"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-usuario')">&#215;</button>
+  <h3>Novo usuario</h3>
+  <div class="fg">
+    <div class="fr full"><label>Nome completo *</label><input id="un" placeholder="Maria da Silva"/></div>
+    <div class="fr full"><label>E-mail *</label><input id="ue" type="email" placeholder="maria@email.com"/></div>
+    <div class="fr"><label>Senha *</label><input id="us" type="password" placeholder="minimo 6 chars"/></div>
+    <div class="fr"><label>Perfil</label>
+      <select id="up"><option value="MEMBRO">Membro</option><option value="SYSADMIN">SysAdmin</option></select>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarUsuario()">Criar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-usuario')">Cancelar</button>
+  </div>
+</div></div>
+
+<!-- MODAL IMPRESSAO -->
+<div class="modal-bg" id="m-print"><div class="modal" style="max-width:400px">
+  <button class="modal-x" onclick="fecharModal('m-print')">&#215;</button>
+  <h3>&#128424; O que imprimir?</h3>
+  <!-- toggle fotos -->
+  <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:10px;padding:10px 14px;margin-bottom:14px">
+    <span style="font-size:.88rem;color:var(--texto)">&#128247; Incluir fotos dos documentos</span>
+    <label style="position:relative;display:inline-block;width:42px;height:24px;cursor:pointer">
+      <input type="checkbox" id="print-com-fotos" style="opacity:0;width:0;height:0"/>
+      <span id="print-fotos-slider" onclick="togglePrintFotos()" style="position:absolute;inset:0;background:#ccc;border-radius:24px;transition:.3s;cursor:pointer"></span>
+      <span id="print-fotos-knob" style="position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;pointer-events:none"></span>
+    </label>
+  </div>
+  <!-- checkboxes -->
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border-radius:10px;cursor:pointer;font-size:.9rem">
+      <input type="checkbox" id="pr-voos" checked style="width:18px;height:18px;accent-color:var(--laranja)"/> &#9992; Voos
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border-radius:10px;cursor:pointer;font-size:.9rem">
+      <input type="checkbox" id="pr-hospedagem" checked style="width:18px;height:18px;accent-color:var(--verde)"/> &#127968; Hospedagem
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border-radius:10px;cursor:pointer;font-size:.9rem">
+      <input type="checkbox" id="pr-passeios" checked style="width:18px;height:18px;accent-color:var(--roxo)"/> &#127914; Passeios
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border-radius:10px;cursor:pointer;font-size:.9rem">
+      <input type="checkbox" id="pr-orcamento" checked style="width:18px;height:18px;accent-color:var(--azul2)"/> &#128176; Orcamento
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border-radius:10px;cursor:pointer;font-size:.9rem">
+      <input type="checkbox" id="pr-checklist" checked style="width:18px;height:18px;accent-color:#D97706)"/> &#10003; Checklist
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border-radius:10px;cursor:pointer;font-size:.9rem">
+      <input type="checkbox" id="pr-documentos" style="width:18px;height:18px;accent-color:#64748B)"/> &#128196; Documentos
+    </label>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="btn-ok" style="flex:1" onclick="imprimirSelecionados()">&#128424; Imprimir</button>
+    <button class="btn-cancel" onclick="fecharModal('m-print')">Cancelar</button>
+  </div>
+</div></div>
+
+<!-- MODAL CADASTRO -->
+<div class="modal-bg" id="m-cadastro"><div class="modal" style="max-width:420px">
+  <button class="modal-x" onclick="fecharModal('m-cadastro')">&#215;</button>
+  <h3>&#128100; Criar conta</h3>
+  <p style="color:var(--muted);font-size:.82rem;margin-bottom:16px;margin-top:-10px">Crie seu acesso. Um administrador podera ajustar seu perfil depois.</p>
+  <div class="fg">
+    <div class="fr full"><label>Nome completo *</label><input id="cn" placeholder="Seu nome"/></div>
+    <div class="fr full"><label>E-mail *</label><input id="ce" type="email" placeholder="seu@email.com"/></div>
+    <div class="fr full"><label>Senha *</label><input id="cs" type="password" placeholder="minimo 6 caracteres"/></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="criarConta()">Criar conta</button>
+    <button class="btn-cancel" onclick="fecharModal('m-cadastro')">Cancelar</button>
+  </div>
+</div></div>
+
+<div id="lightbox" onclick="fecharLightbox()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;align-items:center;justify-content:center;cursor:zoom-out"><img id="lightbox-img" src="" style="max-width:95vw;max-height:95vh;border-radius:12px;object-fit:contain"/></div>
+
+<!-- MODAL EDITAR VIAGEM -->
+<div class="modal-bg" id="m-editar-viagem"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-editar-viagem')">&#215;</button>
+  <h3>&#9998; Editar viagem</h3>
+  <div class="fg">
+    <div class="fr full"><label>Nome da viagem *</label><input id="ev-nome" placeholder="Ex: Ferias na Europa 2026"/></div>
+    <div class="fr full"><label>Destino *</label><input id="ev-dest" placeholder="Ex: Paris, Roma e Lisboa"/></div>
+    <div class="fr"><label>Data de ida</label><input id="ev-ida" type="date"/></div>
+    <div class="fr"><label>Data de volta</label><input id="ev-volta" type="date"/></div>
+    <div class="fr full"><label>Observacoes</label><textarea id="ev-obs" placeholder="Notas gerais..."></textarea></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarEdicaoViagem()">Salvar alteracoes</button>
+    <button class="btn-cancel" onclick="fecharModal('m-editar-viagem')">Cancelar</button>
+    <button class="btn-cancel" style="background:#FEE2E2;color:#991B1B;margin-left:auto" onclick="excluirViagem()">&#128465; Excluir viagem</button>
+  </div>
+</div></div>
+
+<!-- MODAL EDITAR APELIDO -->
+<div class="modal-bg" id="m-apelido"><div class="modal" style="max-width:400px">
+  <button class="modal-x" onclick="fecharModal('m-apelido')">&#215;</button>
+  <h3>&#9998; Editar nome na viagem</h3>
+  <p style="color:var(--muted);font-size:.82rem;margin-bottom:16px;margin-top:-10px">Como esta pessoa sera chamada nesta viagem.</p>
+  <input type="hidden" id="apelido-part-id"/>
+  <div class="fr" style="margin-bottom:16px"><label>Nome / Apelido</label><input id="apelido-valor" placeholder="Ex: Junior, Ana Julia..."/></div>
+  <div class="modal-actions">
+    <button class="btn-ok" onclick="salvarApelido()">Salvar</button>
+    <button class="btn-cancel" onclick="fecharModal('m-apelido')">Cancelar</button>
+  </div>
+</div></div>
+
+<!-- MODAL DOCUMENTO -->
+<div class="modal-bg" id="m-doc"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-doc')">&#215;</button>
+  <h3>&#128196; Adicionar documento</h3>
+  <div class="fg">
+    <div class="fr full"><label>Titular *</label><select id="doc-titular"></select></div>
+    <div class="fr"><label>Tipo *</label>
+      <select id="doc-tipo">
+        <option value="Passaporte">Passaporte</option><option value="RG">RG</option>
+        <option value="CNH">CNH</option><option value="Visto">Visto</option>
+        <option value="Seguro viagem">Seguro viagem</option>
+        <option value="Reserva">Reserva / Comprovante</option><option value="Outro">Outro</option>
+      </select>
+    </div>
+    <div class="fr"><label>Numero / Referencia</label><input id="doc-numero" placeholder="Ex: BR123456"/></div>
+    <div class="fr full"><label>Descricao</label><input id="doc-desc" placeholder="Ex: Passaporte do Joao, validade 2030"/></div>
+    <div class="fr full">
+      <label>Foto do documento (opcional)</label>
+      <div class="upload-area" onclick="document.getElementById('inp-doc-foto').click()">
+        <div style="font-size:2rem">&#128247;</div>
+        <div style="color:var(--muted);font-size:.85rem;margin-top:6px">Clique para fotografar ou selecionar</div>
+        <img id="prev-doc-foto" class="upload-prev"/>
+      </div>
+      <input type="file" id="inp-doc-foto" accept="image/*" style="display:none" onchange="previewDocFoto(this)"/>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" id="btn-salvar-doc" onclick="salvarDoc()">Salvar documento</button>
+    <button class="btn-cancel" onclick="fecharModal('m-doc')">Cancelar</button>
+  </div>
+</div></div>
+
+
+<!-- MODAL DETALHE LUGAR -->
+<div class="modal-bg" id="m-place"><div class="modal">
+  <button class="modal-x" onclick="fecharModal('m-place')">&#215;</button>
+  <div id="place-fotos" style="margin:-24px -24px 16px -24px;border-radius:14px 14px 0 0;overflow:hidden;max-height:200px"></div>
+  <h3 id="place-nome" style="margin-bottom:4px"></h3>
+  <div id="place-tipo" style="font-size:.75rem;color:var(--muted);text-transform:uppercase;margin-bottom:10px"></div>
+  <div id="place-rating" style="color:#F59E0B;font-weight:700;margin-bottom:10px"></div>
+  <div id="place-end" style="font-size:.85rem;color:var(--muted);margin-bottom:8px"></div>
+  <div id="place-desc" style="font-size:.88rem;color:var(--texto);margin-bottom:8px;line-height:1.5"></div>
+  <div id="place-tel" style="font-size:.85rem;margin-bottom:8px"></div>
+  <div id="place-horario" style="font-size:.82rem;margin-bottom:8px"></div>
+  <div id="place-site" style="margin-bottom:16px"></div>
+  <div class="fr" style="margin-bottom:12px">
+    <label>Data do passeio (opcional)</label>
+    <input type="date" id="place-data"/>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-ok" id="btn-place-add" onclick="">+ Adicionar a passeios</button>
+    <button class="btn-cancel" onclick="fecharModal('m-place')">Fechar</button>
+  </div>
+</div></div>
+
+<script>
+// ══════════════════════════════════════
+//  CONFIGURE AQUI
+// ══════════════════════════════════════
+var SUPABASE_URL  = 'https://hsuvzlpgzfhfxtjugztz.supabase.co';var LOGO_URL      = 'https://hsuvzlpgzfhfxtjugztz.supabase.co/storage/v1/object/public/assets/WhatsApp%20Image%202026-06-13%20at%2017.53.31.jpeg';var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzdXZ6bHBnemZoZnh0anVnenR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjYxNjksImV4cCI6MjA5Njk0MjE2OX0.91kI4Xfke__pJPDoMJNnY-u5HJxf65GIr88GMQnUHP0';var BUCKET_CAPAS  = 'capas-viagens';// ══════════════════════════════════════
+
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+var CORES = ['#1A3A8F','#F97316','#0FAB7A','#7C3AED','#D97706','#EF4444','#2952CC','#0891B2'];var ME = null, VA = null, PARTS = [], CONVITES = [];
+
+function gi(id){ return document.getElementById(id); }
+function gv(id){ var e=gi(id); return e?e.value.trim():''; }function clr(ids){ ids.forEach(function(id){ var e=gi(id); if(e) e.value=''; }); }function fmt$(n){ return (n||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }function fmtD(s){
+  if(!s) return '--';var p=s.split('-');if(p.length===3) return p[2]+'/'+p[1]+'/'+p[0];return s;
+}
+function fmtDT(s){
+  if(!s) return '--';try{ var d=new Date(s); return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return s; }
+}
+function ini(n){ return n.split(' ').map(function(w){return w[0];}).slice(0,2).join('').toUpperCase(); }function corAv(id){ return CORES[id.charCodeAt(id.length-1)%CORES.length]; }
+function meuRole(){
+  if(!VA||!ME) return null;
+  if(ME.papel==='SYSADMIN') return 'SYSADMIN';for(var i=0;i<PARTS.length;i++){ if(PARTS[i].user_id===ME.id) return PARTS[i].role; }
+  return null;
+}
+function podeGerenciar(){ var r=meuRole(); return r==='SYSADMIN'||r==='TRIP_ADMIN'; }// confetes
+(function(){
+  var cores=['#F97316','#FACC15','#0FAB7A','#7C3AED','#2952CC','#F472B6','#EF4444'];var c=gi('confetes');if(!c) return;
+  for(var i=0;i<60;i++){
+    var el=document.createElement('div'); el.className='confete';var w=Math.random()*8+4, h=w*(Math.random()*.6+.4);
+    el.style.width=w+'px'; el.style.height=h+'px';el.style.left=(Math.random()*100)+'%';el.style.background=cores[i%cores.length];
+    el.style.opacity=(Math.random()*.7+.3).toString();
+    el.style.animationDuration=(4+Math.random()*6)+'s';el.style.animationDelay=(Math.random()*6)+'s';c.appendChild(el);
+  }
+})();
+
+function tr(celulas){
+  var row=document.createElement('tr');celulas.forEach(function(c){
+    var td=document.createElement('td');if(c&&c.nodeType) td.appendChild(c);
+    else if(typeof c==='string') td.innerHTML=c;else td.textContent=(c===null||c===undefined)?'--':c;row.appendChild(td);
+  });
+  return row;
+}
+function vazioRow(cols,msg){
+  var row=document.createElement('tr'),td=document.createElement('td');td.colSpan=cols; td.className='vazio'; td.textContent=msg;row.appendChild(td); return row;
+}
+function btnDel(onclick_str){
+  var b=document.createElement('button');b.className='btn-ico del'; b.innerHTML='&#128465;';b.setAttribute('onclick',onclick_str); return b;}
+function btnEdit(onclick_str){
+  var b=document.createElement('button');b.className='btn-ico edit'; b.innerHTML='&#9998;';b.setAttribute('onclick',onclick_str); return b;}
+
+// AUTH
+function fazerLogin(){
+  var email=gv('le'), senha=gi('ls').value;if(!email||!senha){ showErroLogin('Preencha e-mail e senha.'); return; }var btn=gi('btn-login-entrar');if(btn){ btn.disabled=true; btn.textContent='Entrando...'; }sb.auth.signInWithPassword({email:email,password:senha}).then(function(res){
+    if(btn){ btn.disabled=false; btn.textContent='Entrar'; }if(res.error){ showErroLogin('E-mail ou senha incorretos.'); return; }iniciarSessao(res.data.user);
+  });
+}
+gi('ls').addEventListener('keydown',function(e){ if(e.key==='Enter') fazerLogin(); });function showErroLogin(msg){ var e=gi('login-erro'); e.textContent=msg; e.style.display='block'; }function iniciarSessao(user){
+  sb.from('profiles').select('*').eq('id',user.id).single().then(function(res){if(!res.data){ showErroLogin('Perfil nao encontrado.'); return; }ME=res.data;
+    gi('hn').textContent=ME.nome;gi('hb').textContent=ME.papel==='SYSADMIN'?'SYSADMIN':'MEMBRO';gi('hb').className='badge-papel '+(ME.papel==='SYSADMIN'?'bp-sysadmin':'bp-membro');gi('btn-nav-sys').style.display=ME.papel==='SYSADMIN'?'':'none';if(gi('btn-gestao')) gi('btn-gestao').style.display=ME.papel==='SYSADMIN'?'':'none';gi('tela-login').style.display='none';gi('tela-app').style.display='block';irPara('viagens');toast('Ola, '+ME.nome+'!','ok');processarConvitePendente(ME.id, ME.email);
+  });
+}
+
+sb.auth.getSession().then(function(res){
+  if(res.data&&res.data.session){
+    iniciarSessao(res.data.session.user);
+  } else {
+    var params=new URLSearchParams(window.location.search);
+    var token=params.get('convite');var emailConvite=params.get('email');if(token&&emailConvite){
+      gi('le').value=decodeURIComponent(emailConvite);window._conviteToken=token;
+      window._conviteEmail=decodeURIComponent(emailConvite);
+      setTimeout(function(){
+        gi('ce').value=decodeURIComponent(emailConvite);abrirModal('m-cadastro');toast('Complete seu cadastro para entrar na viagem!','ok');},500);
+    }
+  }
+});
+
+function processarConvitePendente(userId, email){
+  sb.from('convites_pendentes').select('*').eq('email',email).eq('aceito',false).then(function(res){var convites=res.data||[];
+    if(!convites.length) return;
+    var inserts=convites.map(function(cv){ return {viagem_id:cv.viagem_id,user_id:userId,role:cv.role||'MEMBRO'}; });sb.from('viagem_participantes').upsert(inserts).then(function(){sb.from('convites_pendentes').update({aceito:true}).eq('email',email).then(function(){toast('Voce foi adicionado a '+convites.length+' viagem(ns)!','ok');});
+    });
+  });
+}
+
+function sair(){
+  sb.auth.signOut().then(function(){
+    ME=null; VA=null; PARTS=[]; CONVITES=[];
+    gi('tela-login').style.display='flex';gi('tela-app').style.display='none';gi('ls').value='';});
+}
+
+function criarConta(){
+  var nome=gv('cn'), email=gv('ce'), senha=gi('cs').value;if(!nome||!email||!senha){ toast('Preencha todos os campos','err'); return; }if(senha.length<6){ toast('Senha deve ter pelo menos 6 caracteres','err'); return; }sb.auth.signUp({email:email,password:senha,options:{data:{nome:nome}}}).then(function(res){
+    if(res.error){ toast('Erro: '+res.error.message,'err'); return; }if(res.data&&res.data.user){
+      sb.from('profiles').update({nome:nome}).eq('id',res.data.user.id).then(function(){});}
+    fecharModal('m-cadastro');clr(['cn','ce','cs']);gi('le').value=email; gi('ls').value=senha;toast('Conta criada! Clique em Entrar.','ok');});
+}
+
+// NAVEGACAO
+function irPara(t){
+  var telas=document.querySelectorAll('#tela-app .tela');for(var i=0;i<telas.length;i++) telas[i].classList.remove('ativa');gi('tela-'+t).classList.add('ativa');if(t==='viagens') renderViagens();if(t==='usuarios') carregarUsuarios();if(t==='gestao') carregarTodasViagens();}
+function ativarTab(nome,btn){
+  var tabs=document.querySelectorAll('.tab');var conts=document.querySelectorAll('.tab-conteudo');for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('ativa');btn.classList.add('ativa');for(var i=0;i<conts.length;i++) conts[i].classList.remove('ativo');gi('tab-'+nome).classList.add('ativo');if(nome==='orcamento') renderOrc();if(nome==='roteiro') inicializarRoteiro();}
+function abrirModal(id){ gi(id).classList.add('aberto'); }function fecharModal(id){
+  gi(id).classList.remove('aberto');var mapaBtns={'m-voo':{txt:'Salvar',fn:'salvarVoo()'},'m-hosp':{txt:'Salvar',fn:'salvarHosp()'},'m-parque':{txt:'Salvar',fn:'salvarParque()'},'m-despesa':{txt:'Salvar',fn:'salvarDespesa()'}};if(mapaBtns[id]){
+    var btn=gi(id).querySelector('.btn-ok');if(btn){ btn.textContent=mapaBtns[id].txt; btn.setAttribute('onclick',mapaBtns[id].fn); }_editId=null;
+  }
+}
+document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){ if(e.target===m) m.classList.remove('aberto'); });});
+
+// CAPA
+var _capaFile=null;
+function previewCapa(inp){
+  _capaFile=inp.files[0]; if(!_capaFile) return;
+  var r=new FileReader();
+  r.onload=function(e){ var p=gi('prev-capa'); p.src=e.target.result; p.style.display='block'; };r.readAsDataURL(_capaFile);
+}
+function uploadCapa(inp){
+  var f=inp.files[0]; if(!f||!VA||!podeGerenciar()) return;
+  toast('Enviando imagem...','info');var path=VA.id+'/'+Date.now()+'-'+f.name;sb.storage.from(BUCKET_CAPAS).upload(path,f,{upsert:true}).then(function(res){
+    if(res.error){ toast('Erro ao enviar: '+res.error.message,'err'); return; }var pub=sb.storage.from(BUCKET_CAPAS).getPublicUrl(path);
+    sb.from('viagens').update({capa_url:pub.data.publicUrl}).eq('id',VA.id).then(function(){VA.capa_url=pub.data.publicUrl;
+      var img=gi('dh-img'); img.src=VA.capa_url; img.style.display='block';toast('Imagem atualizada','ok');});
+  });
+}
+
+// VIAGENS
+var _mostrarPassadas=false;
+function togglePassadas(){
+  _mostrarPassadas=!_mostrarPassadas;
+  var btn=gi('btn-toggle-passadas');btn.innerHTML=_mostrarPassadas?'&#128444; Ocultar passadas':'&#128444; Ver passadas';var secs=document.querySelectorAll('.secao-viagens');secs.forEach(function(s){
+    var titulo=s.querySelector('h2');if(titulo&&titulo.textContent.indexOf('passadas')!==-1) s.style.display=_mostrarPassadas?'':'none';});
+}
+function _classificar(v){
+  if(!v.ida&&!v.volta) return 'proxima';var hoje=new Date(); hoje.setHours(0,0,0,0);
+  var ida=v.ida?new Date(v.ida+'T12:00'):null;var volta=v.volta?new Date(v.volta+'T12:00'):null;if(ida&&volta){ if(hoje>=ida&&hoje<=volta) return 'andamento'; if(hoje>volta) return 'passada'; return 'proxima'; }if(ida&&!volta) return hoje>=ida?'andamento':'proxima';if(!ida&&volta) return hoje>volta?'passada':'proxima';return 'proxima';}
+function renderViagens(){
+  var g=gi('grid-viagens');g.innerHTML='<div class="vazio"><div class="vazio-icone">&#8987;</div>Carregando...</div>';sb.from('viagem_participantes').select('viagem_id,role').eq('user_id',ME.id).then(function(pRes){var parts=pRes.data||[];
+    if(!parts.length){
+      g.innerHTML='<div class="vazio"><div class="vazio-icone">&#128506;</div>Nenhuma viagem ainda. Crie a primeira!</div>';return;
+    }
+    var ids=parts.map(function(p){return p.viagem_id;});
+    sb.from('viagens').select('*, viagem_participantes(count)').in('id',ids).order('criado_em',{ascending:false}).then(function(vRes){_renderGrid(vRes.data||[], parts);
+    });
+  });
+}
+function _criarCard(v, parts){
+  var total=v.viagem_participantes&&v.viagem_participantes[0]?v.viagem_participantes[0].count:0;
+  var meuRole='MEMBRO';if(ME.papel==='SYSADMIN') meuRole='SYSADMIN';else if(parts){ var p=parts.find(function(p){return p.viagem_id===v.id;}); if(p) meuRole=p.role; }
+  var lbls={SYSADMIN:'SysAdmin',TRIP_ADMIN:'Admin da viagem',MEMBRO:'Membro'};var lbl=lbls[meuRole]||meuRole;
+  var status=_classificar(v);
+  var statusLabel={andamento:'Em andamento',proxima:'Proxima',passada:'Passada'}[status];var statusCss={andamento:'status-andamento',proxima:'status-proxima',passada:'status-passada'}[status];var hue=v.id.charCodeAt(0)*47%360, hue2=(hue+60)%360;
+  var card=document.createElement('div'); card.className='viagem-card';if(status==='passada') card.style.opacity='.75';card.onclick=(function(vo){return function(){abrirViagem(vo);};})(v);
+  var capa=document.createElement('div'); capa.className='vc-capa';capa.style.background='linear-gradient(135deg,hsl('+hue+',60%,35%),hsl('+hue2+',55%,55%))';if(v.capa_url){var img=document.createElement('img');img.src=v.capa_url;capa.appendChild(img);}var ov=document.createElement('div'); ov.className='vc-overlay';var pe=document.createElement('div'); pe.className='vc-pessoas'; pe.innerHTML='&#128101; '+total;var bs=document.createElement('div'); bs.className='vc-badge-status '+statusCss; bs.textContent=statusLabel;capa.appendChild(ov); capa.appendChild(pe); capa.appendChild(bs); card.appendChild(capa);
+  var body=document.createElement('div'); body.className='vc-body';var nm=document.createElement('div'); nm.className='vc-nome'; nm.textContent=v.nome;var dt=document.createElement('div'); dt.className='vc-dest'; dt.innerHTML='&#128205; '+v.destino;var ds=document.createElement('div'); ds.className='vc-datas'; ds.textContent=fmtD(v.ida)+' \u2192 '+fmtD(v.volta);var rl=document.createElement('span'); rl.className='vc-role'; rl.textContent=lbl;body.appendChild(nm); body.appendChild(dt); body.appendChild(ds); body.appendChild(rl);
+  card.appendChild(body); return card;
+}
+function _renderSecao(g,titulo,icone,viagens,parts,badgeCss){
+  if(!viagens.length) return;
+  var sec=document.createElement('div'); sec.className='secao-viagens';var tit=document.createElement('div'); tit.className='secao-viagens-titulo';var h2=document.createElement('h2'); h2.innerHTML=icone+' '+titulo;var cnt=document.createElement('span'); cnt.className='badge-count '+(badgeCss||''); cnt.textContent=viagens.length;tit.appendChild(h2); tit.appendChild(cnt); sec.appendChild(tit);
+  var grid=document.createElement('div'); grid.className='grid-viagens';viagens.forEach(function(v){ grid.appendChild(_criarCard(v,parts)); });
+  sec.appendChild(grid); g.appendChild(sec);
+}
+function _renderGrid(viagens, parts){
+  var g=gi('grid-viagens'); g.innerHTML='';if(!viagens.length){
+    var div=document.createElement('div'); div.className='vazio';div.innerHTML='<div class="vazio-icone">&#128506;</div>Nenhuma viagem ainda. Crie a primeira!';g.appendChild(div); return;
+  }
+  var andamento=[], proximas=[], passadas=[];
+  viagens.forEach(function(v){
+    var s=_classificar(v);
+    if(s==='andamento') andamento.push(v);else if(s==='proxima') proximas.push(v);else passadas.push(v);
+  });
+  _renderSecao(g,'Em andamento','&#9992;',andamento,parts,'badge-andamento');_renderSecao(g,'Proximas viagens','&#128197;',proximas,parts,'');_renderSecao(g,'Viagens passadas','&#128444;',passadas,parts,'badge-passadas');if(!_mostrarPassadas){
+    var secs=g.querySelectorAll('.secao-viagens');secs.forEach(function(s){
+      var titulo=s.querySelector('h2');if(titulo&&titulo.textContent.indexOf('passadas')!==-1) s.style.display='none';});
+  }
+}
+function abrirModalNovaViagem(){ _capaFile=null; gi('prev-capa').style.display='none'; abrirModal('m-viagem'); }function salvarViagem(){
+  var nome=gv('vn'), dest=gv('vd');if(!nome||!dest){ toast('Nome e destino sao obrigatorios','err'); return; }var btn=gi('btn-criar-viagem'); if(btn){btn.disabled=true;btn.textContent='Criando...';}sb.from('viagens').insert({nome:nome,destino:dest,ida:gv('vi')||null,volta:gv('vv')||null,obs:gv('vo'),criado_por:ME.id}).select().single().then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');if(btn){btn.disabled=false;btn.textContent='Criar viagem';}return;}var vid=res.data.id;
+    sb.from('viagem_participantes').insert({viagem_id:vid,user_id:ME.id,role:'TRIP_ADMIN'}).then(function(){if(_capaFile){
+        var path=vid+'/'+Date.now()+'-'+_capaFile.name;sb.storage.from(BUCKET_CAPAS).upload(path,_capaFile,{upsert:true}).then(function(upRes){
+          if(!upRes.error){ var pub=sb.storage.from(BUCKET_CAPAS).getPublicUrl(path); sb.from('viagens').update({capa_url:pub.data.publicUrl}).eq('id',vid).then(function(){}); }});
+      }
+      if(btn){btn.disabled=false;btn.textContent='Criar viagem';}fecharModal('m-viagem');clr(['vn','vd','vi','vv','vo']);_capaFile=null;renderViagens();toast('Viagem criada!','ok');});
+  });
+}
+
+// DETALHE
+function abrirViagem(v){
+  VA=v;
+  gi('dh-nome').textContent=VA.nome;gi('dh-dest').innerHTML='&#128205; '+VA.destino;gi('dh-datas').textContent=fmtD(VA.ida)+' \u2192 '+fmtD(VA.volta);var img=gi('dh-img');if(VA.capa_url){img.src=VA.capa_url;img.style.display='block';}else{img.src='';img.style.display='none';}sb.from('viagem_participantes').select('id,user_id,role,sem_acesso,nome_externo,apelido,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(res){PARTS=res.data||[];
+    sb.from('convites_pendentes').select('*').eq('viagem_id',VA.id).eq('aceito',false).then(function(cr){CONVITES=cr.data||[];
+      gi('btn-upload-capa').style.display=podeGerenciar()?'':'none';gi('btn-editar-viagem').style.display=podeGerenciar()?'':'none';gi('btn-add-part').style.display=podeGerenciar()?'':'none';var tabs=document.querySelectorAll('.tab');var conts=document.querySelectorAll('.tab-conteudo');for(var i=0;i<tabs.length;i++) tabs[i].classList.toggle('ativa',i===0);for(var i=0;i<conts.length;i++) conts[i].classList.toggle('ativo',i===0);renderVoos();renderHosp();renderParques();renderOrc();renderCheck();renderPart();renderDocs();
+      irPara('detalhe');});
+  });
+}
+
+// VOOS
+function renderVoos(){
+  var tb=gi('tb-voos'); tb.innerHTML='';sb.from('voos').select('*').eq('viagem_id',VA.id).order('partida').then(function(res){var data=res.data||[];
+    if(!data.length){tb.appendChild(vazioRow(9,'Nenhum voo cadastrado.'));return;}data.forEach(function(r){
+      tb.appendChild(tr([r.cia||'--',r.num||'--',(r.orig||'--')+' \u2192 '+(r.dest||'--'),fmtDT(r.partida),fmtDT(r.chegada),r.localizador||'--','R$ '+fmt$(r.valor),r.passageiros||'--',btnEdit("editarVoo('"+r.id+"')"),btnDel("delItem('voos','"+r.id+"',renderVoos,'voo:"+r.id+"')")]));
+    });
+  });
+}
+function abrirModalVoo(){ renderSeletorParticipantes('sel-pass-voo',[]); abrirModal('m-voo'); }function salvarVoo(){
+  var val=parseFloat(gv('fv'))||0;var cia=gv('fc'),num=gv('fn'),orig=gv('fo'),dest=gv('fd');var passageiros=getSelecionados('sel-pass-voo');sb.from('voos').insert({viagem_id:VA.id,cia:cia,num:num,orig:orig,dest:dest,partida:gi('fp').value||null,chegada:gi('fch').value||null,localizador:gv('fl'),valor:val,passageiros:passageiros}).select().single().then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}if(val>0){
+      var desc=[cia,num];if(orig&&dest)desc.push(orig+' - '+dest);sb.from('despesas').insert({viagem_id:VA.id,descricao:desc.filter(Boolean).join(' '),categoria:'Voo',data:gi('fp').value?gi('fp').value.slice(0,10):null,pago_por:'',valor:val,obs:'',origem:'voo:'+res.data.id}).then(function(){});}
+    fecharModal('m-voo');clr(['fc','fn','fo','fd','fp','fch','fl','fv','fps']);renderVoos();renderDespesas();toast('Voo adicionado','ok');});
+}
+function editarVoo(id){
+  sb.from('voos').select('*').eq('id',id).single().then(function(res){if(res.error||!res.data){toast('Erro ao carregar voo','err');return;}var r=res.data; _editId=id;
+    gi('fc').value=r.cia||'';gi('fn').value=r.num||'';gi('fo').value=r.orig||'';gi('fd').value=r.dest||'';gi('fp').value=r.partida?r.partida.slice(0,16):'';gi('fch').value=r.chegada?r.chegada.slice(0,16):'';gi('fl').value=r.localizador||'';gi('fv').value=r.valor||0;renderSeletorParticipantes('sel-pass-voo',[]);var passAntes=r.passageiros||'';setTimeout(function(){
+      gi('sel-pass-voo').querySelectorAll('.part-check').forEach(function(ch){if(passAntes.indexOf(ch.getAttribute('data-nome'))!==-1) ch.classList.add('selecionado');});
+    },50);
+    var btn=gi('m-voo').querySelector('.btn-ok'); btn.textContent='Atualizar voo'; btn.setAttribute('onclick','atualizarVoo()');abrirModal('m-voo');});
+}
+function atualizarVoo(){
+  if(!_editId) return;
+  sb.from('voos').update({cia:gi('fc').value.trim(),num:gi('fn').value.trim(),orig:gi('fo').value.trim(),dest:gi('fd').value.trim(),partida:gi('fp').value||null,chegada:gi('fch').value||null,localizador:gi('fl').value.trim(),valor:parseFloat(gi('fv').value)||0,passageiros:getSelecionados('sel-pass-voo')}).eq('id',_editId).then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}fecharModal('m-voo');_editId=null;clr(['fc','fn','fo','fd','fp','fch','fl','fv']);renderVoos();toast('Voo atualizado!','ok');});
+}
+
+// HOSPEDAGEM
+function renderHosp(){
+  var tb=gi('tb-hosp'); tb.innerHTML='';sb.from('hospedagem').select('*').eq('viagem_id',VA.id).order('checkin').then(function(res){var data=res.data||[];
+    if(!data.length){tb.appendChild(vazioRow(8,'Nenhuma hospedagem cadastrada.'));return;}data.forEach(function(r){
+      tb.appendChild(tr(['<strong>'+(r.nome||'--')+'</strong>',r.endereco||'--',fmtD(r.checkin),fmtD(r.checkout),r.localizador||'--','R$ '+fmt$(r.valor),r.obs||'--',btnEdit("editarHosp('"+r.id+"')"),btnDel("delItem('hospedagem','"+r.id+"',renderHosp,'hosp:"+r.id+"')")]));
+    });
+  });
+}
+function abrirModalHosp(){ renderSeletorParticipantes('sel-pass-hosp',[]); abrirModal('m-hosp'); }function salvarHosp(){
+  var val=parseFloat(gv('hv'))||0, nome=gv('hn2');var hospedes=getSelecionados('sel-pass-hosp');var obsCompleto=gv('ho')+(hospedes?' | Hospedes: '+hospedes:'');sb.from('hospedagem').insert({viagem_id:VA.id,nome:nome,endereco:gv('he'),checkin:gv('hci')||null,checkout:gv('hco')||null,localizador:gv('hl'),valor:val,obs:obsCompleto}).select().single().then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}if(val>0){
+      sb.from('despesas').insert({viagem_id:VA.id,descricao:nome||'Hospedagem',categoria:'Hospedagem',data:gv('hci')||null,pago_por:'',valor:val,obs:'',origem:'hosp:'+res.data.id}).then(function(){});}
+    fecharModal('m-hosp');clr(['hn2','he','hci','hco','hl','hv','ho']);renderHosp();renderDespesas();toast('Hospedagem adicionada','ok');});
+}
+function editarHosp(id){
+  sb.from('hospedagem').select('*').eq('id',id).single().then(function(res){if(res.error||!res.data){toast('Erro ao carregar hospedagem','err');return;}var r=res.data; _editId=id;
+    gi('hn2').value=r.nome||'';gi('he').value=r.endereco||'';gi('hci').value=r.checkin||'';gi('hco').value=r.checkout||'';gi('hl').value=r.localizador||'';gi('hv').value=r.valor||0;gi('ho').value=r.obs||'';renderSeletorParticipantes('sel-pass-hosp',[]);var btn=gi('m-hosp').querySelector('.btn-ok'); btn.textContent='Atualizar'; btn.setAttribute('onclick','atualizarHosp()');abrirModal('m-hosp');});
+}
+function atualizarHosp(){
+  if(!_editId) return;
+  var hospedes=getSelecionados('sel-pass-hosp');sb.from('hospedagem').update({nome:gi('hn2').value.trim(),endereco:gi('he').value.trim(),checkin:gi('hci').value||null,checkout:gi('hco').value||null,localizador:gi('hl').value.trim(),valor:parseFloat(gi('hv').value)||0,obs:gi('ho').value+(hospedes?' | Hospedes: '+hospedes:'')}).eq('id',_editId).then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}fecharModal('m-hosp');_editId=null;clr(['hn2','he','hci','hco','hl','hv','ho']);renderHosp();toast('Hospedagem atualizada!','ok');});
+}
+
+// PASSEIOS
+function renderParques(){
+  var tb=gi('tb-parques'); tb.innerHTML='';sb.from('passeios').select('*').eq('viagem_id',VA.id).order('data').then(function(res){var data=res.data||[];
+    if(!data.length){tb.appendChild(vazioRow(7,'Nenhum passeio cadastrado.'));return;}data.forEach(function(r){
+      var nomeP='<strong style="cursor:pointer;color:var(--azul)" onclick="editarParque(\''+r.id+'\')">'+(r.nome||'--')+'</strong>';
+      tb.appendChild(tr([nomeP,fmtD(r.data),r.tipo||'--',r.quantidade||1,'R$ '+fmt$(r.valor),r.obs||'--',btnEdit("editarParque('"+r.id+"')"),btnDel("delItem('passeios','"+r.id+"',renderParques,'parque:"+r.id+"')")]));
+    });
+  });
+}
+function abrirModalParque(){ renderSeletorParticipantes('sel-pass-parque',[]); abrirModal('m-parque'); }function salvarParque(){
+  var nome=gv('pn'); if(!nome){toast('Nome e obrigatorio','err');return;}var val=parseFloat(gv('pv'))||0;var partics=getSelecionados('sel-pass-parque');sb.from('passeios').insert({viagem_id:VA.id,nome:nome,data:gv('pd')||null,tipo:gv('pt'),quantidade:parseInt(gi('pq').value)||1,valor:val,obs:gv('po')+(partics?' | Participantes: '+partics:'')}).select().single().then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}if(val>0){
+      sb.from('despesas').insert({viagem_id:VA.id,descricao:nome,categoria:'Ingresso',data:gv('pd')||null,pago_por:'',valor:val,obs:'',origem:'parque:'+res.data.id}).then(function(){});}
+    fecharModal('m-parque');clr(['pn','pd','pt','pv','po']);gi('pq').value='1';renderParques();renderDespesas();toast('Passeio adicionado','ok');});
+}
+function editarParque(id){
+  sb.from('passeios').select('*').eq('id',id).single().then(function(res){if(res.error||!res.data){toast('Erro ao carregar passeio','err');return;}var r=res.data; _editId=id;
+    gi('pn').value=r.nome||'';gi('pd').value=r.data||'';gi('pt').value=r.tipo||'';gi('pq').value=r.quantidade||1;gi('pv').value=r.valor||0;gi('po').value=r.obs||'';renderSeletorParticipantes('sel-pass-parque',[]);var btn=gi('m-parque').querySelector('.btn-ok'); btn.textContent='Atualizar'; btn.setAttribute('onclick','atualizarParque()');abrirModal('m-parque');});
+}
+function atualizarParque(){
+  if(!_editId) return;
+  var partics=getSelecionados('sel-pass-parque');sb.from('passeios').update({nome:gi('pn').value.trim(),data:gi('pd').value||null,tipo:gi('pt').value.trim(),quantidade:parseInt(gi('pq').value)||1,valor:parseFloat(gi('pv').value)||0,obs:gi('po').value+(partics?' | Participantes: '+partics:'')}).eq('id',_editId).then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}fecharModal('m-parque');_editId=null;clr(['pn','pd','pt','pv','po']);gi('pq').value='1';renderParques();toast('Passeio atualizado!','ok');});
+}
+
+// DESPESAS
+function renderDespesas(){
+  sb.from('despesas').select('*').eq('viagem_id',VA.id).order('data').then(function(res){var dados=res.data||[];
+    var auto=dados.filter(function(r){return !!r.origem;});
+    var livre=dados.filter(function(r){return !r.origem;});
+    var ta=gi('tb-desp-auto'); ta.innerHTML='';if(!auto.length){ta.appendChild(vazioRow(5,'Nenhuma ainda.'));}else{ auto.forEach(function(r){
+      var lock=document.createElement('span'); lock.innerHTML='&#128274;'; lock.style.color='var(--muted)';ta.appendChild(tr([r.descricao,r.categoria||'--',fmtD(r.data),'R$ '+fmt$(r.valor),lock]));});}
+    var tl=gi('tb-desp-livre'); tl.innerHTML='';if(!livre.length){tl.appendChild(vazioRow(7,'Nenhum gasto avulso registrado.'));}else{ livre.forEach(function(r){
+      tl.appendChild(tr([r.descricao,r.categoria||'--',fmtD(r.data),r.pago_por||'--',r.obs||'--','R$ '+fmt$(r.valor),btnEdit("editarDespesa('"+r.id+"')"),btnDel("delDespesa('"+r.id+"')")]));
+    });}
+  });
+}
+function renderOrc(){
+  renderDespesas();
+  sb.from('despesas').select('categoria,valor,origem').eq('viagem_id',VA.id).then(function(res){var dados=res.data||[];
+    var total=dados.reduce(function(s,r){return s+(r.valor||0);},0);
+    var totalAuto=dados.filter(function(r){return !!r.origem;}).reduce(function(s,r){return s+(r.valor||0);},0);
+    var totalLivre=dados.filter(function(r){return !r.origem;}).reduce(function(s,r){return s+(r.valor||0);},0);
+    var cats={}; dados.forEach(function(r){var c=r.categoria||'Outros';cats[c]=(cats[c]||0)+(r.valor||0);});var maior=null; Object.keys(cats).forEach(function(k){if(!maior||cats[k]>cats[maior])maior=k;});
+    var wrap=gi('orc-cards'); wrap.innerHTML='';[{label:'Total geral',val:'R$ '+fmt$(total),dest:true},{label:'Voos + Hotel + Passeios',val:'R$ '+fmt$(totalAuto),dest:false},{label:'Gastos avulsos',val:'R$ '+fmt$(totalLivre),dest:false},{label:'Maior categoria',val:maior||'--',dest:false}].forEach(function(d){
+      var c=document.createElement('div'); c.className='orc-card'+(d.dest?' dest':'');var lbl=document.createElement('div'); lbl.className='orc-label'; lbl.textContent=d.label;var vl=document.createElement('div'); vl.className='orc-val'; vl.textContent=d.val;c.appendChild(lbl); c.appendChild(vl); wrap.appendChild(c);
+    });
+  });
+}
+function salvarDespesa(){
+  var desc=gv('dd'); if(!desc){toast('Descricao obrigatoria','err');return;}sb.from('despesas').insert({viagem_id:VA.id,descricao:desc,categoria:gv('dc')||'Outros',data:gv('ddt')||null,pago_por:gv('dp'),valor:parseFloat(gv('dv'))||0,obs:gv('dobs')||''}).then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}fecharModal('m-despesa');clr(['dd','dc','ddt','dp','dv','dobs']);renderDespesas();renderOrc();toast('Gasto adicionado','ok');});
+}
+function editarDespesa(id){
+  sb.from('despesas').select('*').eq('id',id).single().then(function(res){if(res.error||!res.data){toast('Erro ao carregar despesa','err');return;}var r=res.data; _editId=id;
+    gi('dd').value=r.descricao||'';gi('dc').value=r.categoria||'Outros';gi('ddt').value=r.data||'';gi('dp').value=r.pago_por||'';gi('dv').value=r.valor||0;gi('dobs').value=r.obs||'';var btn=gi('m-despesa').querySelector('.btn-ok'); btn.textContent='Atualizar'; btn.setAttribute('onclick','atualizarDespesa()');abrirModal('m-despesa');});
+}
+function atualizarDespesa(){
+  if(!_editId) return;
+  sb.from('despesas').update({descricao:gi('dd').value.trim(),categoria:gi('dc').value||'Outros',data:gi('ddt').value||null,pago_por:gi('dp').value.trim(),valor:parseFloat(gi('dv').value)||0,obs:gi('dobs').value}).eq('id',_editId).then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}fecharModal('m-despesa');_editId=null;clr(['dd','dc','ddt','dp','dv','dobs']);renderDespesas();renderOrc();toast('Despesa atualizada!','ok');});
+}
+function delDespesa(id){
+  if(!confirm('Remover esta despesa?')) return;sb.from('despesas').delete().eq('id',id).then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}renderDespesas();renderOrc();toast('Removido','info');});
+}
+
+// CHECKLIST
+function renderCheck(){
+  var c=gi('lista-check'); c.innerHTML='';sb.from('checklist').select('*').eq('viagem_id',VA.id).order('criado_em').then(function(res){var data=res.data||[];
+    if(!data.length){
+      var div=document.createElement('div'); div.className='vazio'; div.innerHTML='<div class="vazio-icone">&#128203;</div>Lista vazia!';c.appendChild(div); return;
+    }
+    data.forEach(function(r){
+      var row=document.createElement('div'); row.className='checklist-item'+(r.concluido?' concluido':'');var box=document.createElement('div'); box.className='check-box'+(r.concluido?' marcado':'');box.innerHTML=r.concluido?'&#10003;':'';box.onclick=(function(rid,val){return function(){toggleItem(rid,val);};})(r.id,!r.concluido);
+      var txt=document.createElement('span'); txt.className='check-texto'; txt.textContent=r.descricao;var resp=document.createElement('span'); resp.className='check-resp'; resp.textContent=r.responsavel||'';var del=btnDel("delItem('checklist','"+r.id+"',renderCheck,'')");row.appendChild(box); row.appendChild(txt); row.appendChild(resp); row.appendChild(del);
+      c.appendChild(row);
+    });
+  });
+}
+function toggleItem(id,val){
+  sb.from('checklist').update({concluido:val}).eq('id',id).then(function(){renderCheck();});}
+function salvarItem(){
+  var desc=gv('ii'); if(!desc){toast('Descricao obrigatoria','err');return;}sb.from('checklist').insert({viagem_id:VA.id,descricao:desc,responsavel:gv('ir')}).then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}fecharModal('m-item');clr(['ii','ir']);renderCheck();toast('Item adicionado','ok');});
+}
+
+// PARTICIPANTES
+function renderPart(){
+  var g=gi('part-grid'); g.innerHTML='';PARTS.forEach(function(p){
+    if(p.sem_acesso){
+      var chip=document.createElement('div'); chip.className='part-chip'; chip.style.cssText='border:1.5px solid var(--borda)';var av=document.createElement('div'); av.className='part-av'; av.style.background='#94A3B8'; av.innerHTML='&#128100;';var info=document.createElement('div');var nomeExtExib=p.apelido||p.nome_externo||'Sem nome';var nm=document.createElement('div'); nm.className='part-nome'; nm.textContent=nomeExtExib;var rl=document.createElement('div'); rl.className='part-role';rl.innerHTML='<span style="background:#F1F5F9;color:#64748B;padding:1px 6px;border-radius:8px;font-size:.68rem;font-weight:700">Sem acesso</span>';info.appendChild(nm); info.appendChild(rl); chip.appendChild(av); chip.appendChild(info);
+      if(podeGerenciar()){
+        var ed2=document.createElement('button'); ed2.className='btn-ico edit'; ed2.innerHTML='&#9998;';ed2.onclick=(function(pid,na){return function(e){e.stopPropagation();abrirEditarApelido(pid,na);};})(p.id,nomeExtExib);
+        chip.appendChild(ed2);
+        var rm=document.createElement('button'); rm.className='btn-rm'; rm.innerHTML='&times;';rm.onclick=(function(pid){return function(){removerPartById(pid);};})(p.id);
+        chip.appendChild(rm);
+      }
+      g.appendChild(chip); return;
+    }
+    var u=p.profiles; if(!u) return;
+    var lbls={TRIP_ADMIN:'Admin da viagem',MEMBRO:'Membro',SYSADMIN:'SysAdmin'};var chip=document.createElement('div'); chip.className='part-chip';var av=document.createElement('div'); av.className='part-av'; av.style.background=corAv(u.id); av.textContent=ini(u.nome);var info=document.createElement('div');var nomeExib=p.apelido||u.nome;
+    var nm=document.createElement('div'); nm.className='part-nome'; nm.textContent=nomeExib;var rl=document.createElement('div'); rl.className='part-role'; rl.textContent=lbls[p.role]||p.role;info.appendChild(nm); info.appendChild(rl); chip.appendChild(av); chip.appendChild(info);
+    if(podeGerenciar()||p.user_id===ME.id){
+      var ed=document.createElement('button'); ed.className='btn-ico edit'; ed.innerHTML='&#9998;';ed.onclick=(function(pid,na){return function(e){e.stopPropagation();abrirEditarApelido(pid,na);};})(p.id,nomeExib);
+      chip.appendChild(ed);
+    }
+    if(podeGerenciar()&&p.user_id!==ME.id){
+      var rm=document.createElement('button'); rm.className='btn-rm'; rm.innerHTML='&times;';rm.onclick=(function(uid){return function(){removerPart(uid);};})(p.user_id);
+      chip.appendChild(rm);
+    }
+    g.appendChild(chip);
+  });
+  CONVITES.forEach(function(cv){
+    var chip=document.createElement('div'); chip.className='part-chip'; chip.style.cssText='border:2px dashed var(--borda);opacity:.85';var av=document.createElement('div'); av.className='part-av'; av.style.background='#94A3B8'; av.innerHTML='&#9993;';var info=document.createElement('div');var nm=document.createElement('div'); nm.className='part-nome'; nm.textContent=cv.nome_convidado||cv.email;var rl=document.createElement('div'); rl.className='part-role';rl.innerHTML='<span style="background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:8px;font-size:.68rem;font-weight:700">Pendente</span>';info.appendChild(nm); info.appendChild(rl);
+    var acoes=document.createElement('div'); acoes.style.cssText='display:flex;gap:4px;margin-left:auto';var btnCopy=document.createElement('button'); btnCopy.style.cssText='background:var(--verde);border:none;color:#fff;padding:4px 10px;border-radius:8px;font-size:.75rem;cursor:pointer';btnCopy.innerHTML='&#128203; Link';btnCopy.onclick=(function(lk){return function(){copiarLink(lk);};})(cv.link);
+    var btnCancel=document.createElement('button'); btnCancel.className='btn-rm'; btnCancel.innerHTML='&times;';btnCancel.onclick=(function(id){return function(){cancelarConvite(id);};})(cv.id);
+    acoes.appendChild(btnCopy); acoes.appendChild(btnCancel);
+    chip.appendChild(av); chip.appendChild(info); chip.appendChild(acoes); g.appendChild(chip);
+  });
+  if(!PARTS.length&&!CONVITES.length){
+    var div=document.createElement('div'); div.className='vazio'; div.textContent='Nenhum participante ainda.'; g.appendChild(div);}
+}
+function recarregarParts(){
+  sb.from('viagem_participantes').select('id,user_id,role,sem_acesso,nome_externo,apelido,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(r){PARTS=r.data||[];
+    sb.from('convites_pendentes').select('*').eq('viagem_id',VA.id).eq('aceito',false).then(function(cv){CONVITES=cv.data||[]; renderPart();
+    });
+  });
+}
+function abrirModalPart(){
+  if(!podeGerenciar()){toast('Sem permissao','err');return;}clr(['conv-email','conv-nome','sa-nome']); gi('conv-role').value='MEMBRO';abrirAbaConvite(); abrirModal('m-part');}
+function abrirAbaConvite(){
+  gi('painel-convite').style.display=''; gi('painel-semacesso').style.display='none';gi('tab-convite').style.background='var(--azul)'; gi('tab-convite').style.color='#fff';gi('tab-semacesso').style.background='transparent'; gi('tab-semacesso').style.color='var(--muted)';}
+function abrirAbaSemAcesso(){
+  gi('painel-convite').style.display='none'; gi('painel-semacesso').style.display='';gi('tab-semacesso').style.background='var(--azul)'; gi('tab-semacesso').style.color='#fff';gi('tab-convite').style.background='transparent'; gi('tab-convite').style.color='var(--muted)';}
+function adicionarSemAcesso(){
+  var nome=gi('sa-nome').value.trim(); if(!nome){toast('Nome e obrigatorio','err');return;}sb.from('viagem_participantes').insert({viagem_id:VA.id,user_id:null,nome_externo:nome,sem_acesso:true,role:'MEMBRO'}).then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}gi('sa-nome').value=''; fecharModal('m-part'); recarregarParts(); toast(nome+' adicionado!','ok');});
+}
+function gerarToken(){
+  var arr=new Uint8Array(16); crypto.getRandomValues(arr);
+  return Array.from(arr).map(function(b){return b.toString(16).padStart(2,'0');}).join('');}
+function enviarConvite(){
+  var email=gv('conv-email'), nome=gv('conv-nome'), role=gi('conv-role').value;if(!email){toast('E-mail e obrigatorio','err');return;}var btn=gi('btn-conv-ok'); btn.disabled=true; btn.textContent='Processando...';sb.from('profiles').select('id,nome').eq('email',email).single().then(function(res){if(res.data){
+      sb.from('viagem_participantes').upsert({viagem_id:VA.id,user_id:res.data.id,role:role}).then(function(){btn.disabled=false; btn.innerHTML='&#128231; Enviar convite';fecharModal('m-part'); clr(['conv-email','conv-nome']); recarregarParts();toast(res.data.nome+' ja tem conta e foi adicionado!','ok');}); return;
+    }
+    var token=gerarToken();
+    var link=window.location.origin+window.location.pathname+'?convite='+token+'&email='+encodeURIComponent(email);sb.from('convites_pendentes').upsert({email:email,viagem_id:VA.id,token:token,nome_convidado:nome||null,role:role,link:link,aceito:false}).then(function(){btn.disabled=false; btn.innerHTML='&#128231; Enviar convite';fecharModal('m-part'); clr(['conv-email','conv-nome']); recarregarParts();toast('Convite gerado! Copie o link na lista de participantes.','ok');});
+  });
+}
+function copiarLink(link){
+  navigator.clipboard.writeText(link).then(function(){ toast('Link copiado!','ok'); }).catch(function(){var el=document.createElement('textarea'); el.value=link; document.body.appendChild(el);el.select(); document.execCommand('copy'); document.body.removeChild(el); toast('Link copiado!','ok');});
+}
+function cancelarConvite(id){
+  if(!confirm('Cancelar este convite?')) return;sb.from('convites_pendentes').delete().eq('id',id).then(function(){ recarregarParts(); toast('Convite cancelado','info'); });}
+function removerPart(uid){
+  if(!confirm('Remover este participante?')) return;sb.from('viagem_participantes').delete().eq('viagem_id',VA.id).eq('user_id',uid).then(function(){PARTS=PARTS.filter(function(p){return p.user_id!==uid;}); renderPart(); toast('Participante removido','info');});
+}
+function removerPartById(id){
+  if(!confirm('Remover este participante?')) return;sb.from('viagem_participantes').delete().eq('id',id).then(function(){PARTS=PARTS.filter(function(p){return p.id!==id;}); renderPart(); toast('Participante removido','info');});
+}
+function abrirEditarApelido(partId,nomeAtual){
+  gi('apelido-part-id').value=partId; gi('apelido-valor').value=nomeAtual||''; abrirModal('m-apelido');}
+function salvarApelido(){
+  var id=gi('apelido-part-id').value, apelido=gi('apelido-valor').value.trim();if(!apelido){toast('Digite um nome','err');return;}sb.from('viagem_participantes').update({apelido:apelido}).eq('id',id).then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}fecharModal('m-apelido'); recarregarParts(); toast('Nome atualizado!','ok');});
+}
+
+// SELETOR DE PARTICIPANTES
+function renderSeletorParticipantes(containerId,selecionados){
+  var container=gi(containerId); if(!container) return; container.innerHTML='';var todos=[];
+  PARTS.forEach(function(p){
+    var nome=p.apelido||(p.profiles?p.profiles.nome:null)||p.nome_externo||'?';todos.push({id:p.user_id||('ext_'+p.id),nome:nome,cor:p.profiles?corAv(p.profiles.id):'#94A3B8'});});
+  if(!todos.length){ container.innerHTML='<span style="color:var(--muted);font-size:.85rem">Nenhum participante ainda</span>'; return; }todos.forEach(function(u){
+    var sel=selecionados&&selecionados.indexOf(u.id)!==-1;
+    var chip=document.createElement('div'); chip.className='part-check'+(sel?' selecionado':'');chip.setAttribute('data-id',u.id); chip.setAttribute('data-nome',u.nome);var av=document.createElement('div'); av.className='pc-av'; av.style.background=u.cor; av.textContent=u.nome.charAt(0).toUpperCase();var nm=document.createElement('span'); nm.textContent=u.nome;chip.appendChild(av); chip.appendChild(nm);
+    chip.onclick=function(){ chip.classList.toggle('selecionado'); };container.appendChild(chip);
+  });
+}
+function getSelecionados(containerId){
+  var nomes=[];
+  var chips=gi(containerId).querySelectorAll('.part-check.selecionado');chips.forEach(function(ch){ nomes.push(ch.getAttribute('data-nome')); });return nomes.join(', ');}
+
+// DELETE
+function delItem(tabela,id,cb,origem){
+  if(!confirm('Remover este item?')) return;sb.from(tabela).delete().eq('id',id).then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}if(origem) sb.from('despesas').delete().eq('viagem_id',VA.id).eq('origem',origem).then(function(){ renderDespesas(); });if(cb) cb(); toast('Removido','info');});
+}
+
+// DOCUMENTOS
+var _docFotoFile=null;
+function previewDocFoto(inp){
+  _docFotoFile=inp.files[0]; if(!_docFotoFile) return;
+  var r=new FileReader();
+  r.onload=function(e){ var p=gi('prev-doc-foto'); p.src=e.target.result; p.style.display='block'; };r.readAsDataURL(_docFotoFile);
+}
+function abrirModalDoc(){
+  _docFotoFile=null; gi('prev-doc-foto').style.display='none';gi('doc-numero').value=''; gi('doc-desc').value=''; gi('inp-doc-foto').value='';var sel=gi('doc-titular'); sel.innerHTML='';PARTS.forEach(function(p){
+    var nome=p.apelido||(p.profiles?p.profiles.nome:p.nome_externo)||'?';var opt=document.createElement('option'); opt.value=p.id; opt.textContent=nome; sel.appendChild(opt);});
+  abrirModal('m-doc');}
+function salvarDoc(){
+  var titularId=gi('doc-titular').value, tipo=gi('doc-tipo').value;if(!tipo){toast('Tipo e obrigatorio','err');return;}var btn=gi('btn-salvar-doc'); btn.disabled=true; btn.textContent='Salvando...';function inserirDoc(fotoUrl){
+    sb.from('documentos').insert({viagem_id:VA.id,titular_id:titularId||null,tipo:tipo,descricao:gi('doc-desc').value.trim(),numero:gi('doc-numero').value.trim(),foto_url:fotoUrl||null}).then(function(res){btn.disabled=false; btn.textContent='Salvar documento';if(res.error){toast('Erro: '+res.error.message,'err');return;}fecharModal('m-doc'); renderDocs(); toast('Documento salvo!','ok');});
+  }
+  if(_docFotoFile){
+    var path=VA.id+'/docs/'+Date.now()+'-'+_docFotoFile.name;sb.storage.from('documentos').upload(path,_docFotoFile,{upsert:true}).then(function(res){if(res.error){inserirDoc(null);return;}
+      var pub=sb.storage.from('documentos').getPublicUrl(path);inserirDoc(pub.data.publicUrl);
+    });
+  } else { inserirDoc(null); }
+}
+function renderDocs(){
+  var lista=gi('lista-docs'); lista.innerHTML='';sb.from('documentos').select('*, viagem_participantes(id,apelido,nome_externo,profiles(nome))').eq('viagem_id',VA.id).order('criado_em').then(function(res){var docs=res.data||[];
+    if(!docs.length){
+      var div=document.createElement('div'); div.className='vazio'; div.innerHTML='<div class="vazio-icone">&#128196;</div>Nenhum documento.'; lista.appendChild(div); return;}
+    var icones={Passaporte:'&#127758;',RG:'&#127994;',CNH:'&#128663;',Visto:'&#128204;','Seguro viagem':'&#128274;',Reserva:'&#128203;',Outro:'&#128196;'};docs.forEach(function(d){
+      var card=document.createElement('div'); card.className='doc-card';var fotoDiv=document.createElement('div'); fotoDiv.className='doc-foto';if(d.foto_url){ var img=document.createElement('img'); img.src=d.foto_url; img.onclick=(function(url){return function(){abrirLightbox(url);};})(d.foto_url); fotoDiv.appendChild(img); }else { fotoDiv.innerHTML=icones[d.tipo]||'&#128196;'; }var info=document.createElement('div'); info.className='doc-info';var tipo=document.createElement('div'); tipo.className='doc-tipo'; tipo.textContent=d.tipo;var nome=document.createElement('div'); nome.className='doc-nome'; nome.textContent=d.descricao||(d.tipo+(d.numero?' - '+d.numero:''));var detalhe=document.createElement('div'); detalhe.className='doc-detalhe'; if(d.numero) detalhe.textContent='Num: '+d.numero;info.appendChild(tipo); info.appendChild(nome); info.appendChild(detalhe);
+      var acoes=document.createElement('div'); acoes.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:6px';if(d.viagem_participantes){ var vp=d.viagem_participantes; var nomeT=vp.apelido||(vp.profiles?vp.profiles.nome:vp.nome_externo)||'--'; var tag=document.createElement('span'); tag.className='doc-titular'; tag.textContent=nomeT; acoes.appendChild(tag); }if(podeGerenciar()){ var del=document.createElement('button'); del.className='btn-ico del'; del.innerHTML='&#128465;'; del.onclick=(function(id){return function(){delDoc(id);};})(d.id); acoes.appendChild(del); }card.appendChild(fotoDiv); card.appendChild(info); card.appendChild(acoes); lista.appendChild(card);
+    });
+  });
+}
+function delDoc(id){ if(!confirm('Remover?')) return; sb.from('documentos').delete().eq('id',id).then(function(){ renderDocs(); toast('Removido','info'); }); }function abrirLightbox(url){ gi('lightbox-img').src=url; gi('lightbox').classList.add('aberto'); }function fecharLightbox(){ gi('lightbox').classList.remove('aberto'); gi('lightbox-img').src=''; }// EDITAR VIAGEM
+function abrirEditarViagem(){
+  if(!podeGerenciar()){toast('Sem permissao','err');return;}gi('ev-nome').value=VA.nome||''; gi('ev-dest').value=VA.destino||'';gi('ev-ida').value=VA.ida||''; gi('ev-volta').value=VA.volta||''; gi('ev-obs').value=VA.obs||'';abrirModal('m-editar-viagem');}
+function salvarEdicaoViagem(){
+  var nome=gi('ev-nome').value.trim(), dest=gi('ev-dest').value.trim();if(!nome||!dest){toast('Nome e destino sao obrigatorios','err');return;}var btn=document.querySelector('#m-editar-viagem .btn-ok');if(btn){btn.disabled=true;btn.textContent='Salvando...';}sb.from('viagens').update({nome:nome,destino:dest,ida:gi('ev-ida').value||null,volta:gi('ev-volta').value||null,obs:gi('ev-obs').value}).eq('id',VA.id).then(function(res){if(btn){btn.disabled=false;btn.textContent='Salvar alteracoes';}if(res.error){toast('Erro: '+res.error.message,'err');return;}VA.nome=nome; VA.destino=dest; VA.ida=gi('ev-ida').value; VA.volta=gi('ev-volta').value; VA.obs=gi('ev-obs').value;gi('dh-nome').textContent=nome; gi('dh-dest').innerHTML='&#128205; '+dest;gi('dh-datas').textContent=fmtD(VA.ida)+' \u2192 '+fmtD(VA.volta);fecharModal('m-editar-viagem'); toast('Viagem atualizada!','ok');});
+}
+function excluirViagem(){
+  if(!confirm('Tem certeza que deseja EXCLUIR esta viagem? Todos os dados serao perdidos.')) return;if(!confirm('Confirma a exclusao de "'+VA.nome+'"?')) return;sb.from('viagens').delete().eq('id',VA.id).then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}fecharModal('m-editar-viagem'); toast('Viagem excluida','info'); irPara('viagens');});
+}
+
+// USUARIOS (sysadmin)
+var _editId=null;
+function carregarUsuarios(){
+  sb.from('profiles').select('*').order('nome').then(function(res){var lista=gi('lista-usuarios'); lista.innerHTML='';(res.data||[]).forEach(function(u){
+      var row=document.createElement('div'); row.className='u-row';var av=document.createElement('div'); av.className='u-av'; av.style.background=corAv(u.id); av.textContent=ini(u.nome);var info=document.createElement('div'); info.className='u-info';var nm=document.createElement('div'); nm.className='u-nome'; nm.textContent=u.nome;var em=document.createElement('div'); em.className='u-email'; em.textContent=u.email;info.appendChild(nm); info.appendChild(em);
+      var bdg=document.createElement('span'); bdg.className='badge '+(u.papel==='SYSADMIN'?'b-sys':'b-mem'); bdg.textContent=u.papel;row.appendChild(av); row.appendChild(info); row.appendChild(bdg); lista.appendChild(row);
+    });
+  });
+}
+function salvarUsuario(){
+  var nome=gv('un'),email=gv('ue'),senha=gi('us').value,papel=gv('up');if(!nome||!email||!senha){toast('Preencha todos os campos','err');return;}if(senha.length<6){toast('Senha deve ter pelo menos 6 caracteres','err');return;}var btn=gi('btn-criar-user'); if(btn){btn.disabled=true;btn.textContent='Criando...';}sb.auth.signUp({email:email,password:senha,options:{data:{nome:nome}}}).then(function(res){
+    if(res.error){toast('Erro: '+res.error.message,'err');if(btn){btn.disabled=false;btn.textContent='Criar';}return;}if(res.data&&res.data.user&&papel==='SYSADMIN') sb.from('profiles').update({papel:'SYSADMIN',nome:nome}).eq('id',res.data.user.id).then(function(){});if(btn){btn.disabled=false;btn.textContent='Criar';}fecharModal('m-usuario'); clr(['un','ue','us']); carregarUsuarios(); toast('Usuario criado!','ok');});
+}
+
+// GESTAO (sysadmin)
+function carregarTodasViagens(){
+  var lista=gi('lista-todas-viagens');lista.innerHTML='<div class="vazio"><div class="vazio-icone">&#8987;</div>Carregando...</div>';sb.from('viagens').select('*, viagem_participantes(count)').order('criado_em',{ascending:false}).then(function(res){var viagens=res.data||[]; lista.innerHTML='';if(!viagens.length){ lista.innerHTML='<div class="vazio">Nenhuma viagem no sistema.</div>'; return; }viagens.forEach(function(v){
+      var total=v.viagem_participantes&&v.viagem_participantes[0]?v.viagem_participantes[0].count:0;
+      var status=_classificar(v);
+      var statusLabel={andamento:'Em andamento',proxima:'Proxima',passada:'Passada'}[status];var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--borda);cursor:pointer';row.onclick=(function(vo){return function(){abrirViagem(vo);};})(v);
+      row.innerHTML='<div style="flex:1"><div style="font-weight:700;font-size:.95rem">'+v.nome+'</div><div style="font-size:.8rem;color:var(--muted)">&#128205; '+v.destino+'</div><div style="font-size:.78rem;color:var(--muted)">'+fmtD(v.ida)+' \u2192 '+fmtD(v.volta)+'</div></div><span style="font-size:.75rem;font-weight:700">'+statusLabel+'</span><span style="font-size:.8rem;color:var(--muted)">&#128101; '+total+'</span>';lista.appendChild(row);
+    });
+  });
+}
+
+// IMPRESSAO
+function _prTabela(headers, rows, vazioMsg){
+  if(!rows.length) return '<p class="pr-vazio">'+vazioMsg+'</p>';
+  var html='<table class="pr-table"><tr>';
+  headers.forEach(function(h){ html+='<th>'+h+'</th>'; });
+  html+='</tr>';
+  rows.forEach(function(r){ html+='<tr>'; r.forEach(function(cell){ html+='<td>'+(cell||'--')+'</td>'; }); html+='</tr>'; });
+  return html+'</table>';
+}
+
+function gerarRelatorio(secao){
+  var r=gi('print-report'), v=VA;
+  var partsNomes=PARTS.map(function(p){ return p.apelido||(p.profiles?p.profiles.nome:p.nome_externo)||'?'; }).join(', ');
+  var html='<div class="pr-header"><div class="pr-titulo">'+v.nome+'</div><div class="pr-sub">&#128205; '+v.destino;
+  if(v.ida||v.volta) html+=' &nbsp;|&nbsp; '+fmtD(v.ida)+' &#8594; '+fmtD(v.volta);
+  if(partsNomes) html+=' &nbsp;|&nbsp; &#128101; '+partsNomes;
+  html+='</div></div>';
+  var promessas=[];
+  var secList = Array.isArray(secao) ? secao : [secao];
+  var tudoFlag = secList.indexOf('tudo') !== -1;
+  if(tudoFlag||secList.indexOf('voos')!==-1){
+    promessas.push(sb.from('voos').select('*').eq('viagem_id',v.id).order('partida').then(function(res){
+      var rows=(res.data||[]).map(function(r){ return [r.cia,r.num,(r.orig||'')+( r.dest?' → '+r.dest:''),fmtDT(r.partida),fmtDT(r.chegada),r.localizador,'R$ '+fmt$(r.valor),r.passageiros]; });
+      return '<div class="pr-secao"><div class="pr-secao-titulo">&#9992; Voos</div>'+_prTabela(['Cia','Num','Trecho','Partida','Chegada','Loc','Valor','Passageiros'],rows,'Nenhum voo cadastrado.')+'</div>';
+    }));
+  }
+  if(tudoFlag||secList.indexOf('hospedagem')!==-1){
+    promessas.push(sb.from('hospedagem').select('*').eq('viagem_id',v.id).order('checkin').then(function(res){
+      var rows=(res.data||[]).map(function(r){ return [r.nome,r.endereco,fmtD(r.checkin),fmtD(r.checkout),r.localizador,'R$ '+fmt$(r.valor),r.obs]; });
+      return '<div class="pr-secao"><div class="pr-secao-titulo">&#127968; Hospedagem</div>'+_prTabela(['Local','Endereco','Check-in','Check-out','Loc','Valor','Obs'],rows,'Nenhuma hospedagem cadastrada.')+'</div>';
+    }));
+  }
+  if(tudoFlag||secList.indexOf('passeios')!==-1){
+    promessas.push(sb.from('passeios').select('*').eq('viagem_id',v.id).order('data').then(function(res){
+      var rows=(res.data||[]).map(function(r){ return [r.nome,fmtD(r.data),r.tipo,r.quantidade,'R$ '+fmt$(r.valor),r.obs]; });
+      return '<div class="pr-secao"><div class="pr-secao-titulo">&#127914; Passeios</div>'+_prTabela(['Local','Data','Tipo','Qtd','Valor','Obs'],rows,'Nenhum passeio cadastrado.')+'</div>';
+    }));
+  }
+  if(tudoFlag||secList.indexOf('orcamento')!==-1){
+    promessas.push(sb.from('despesas').select('*').eq('viagem_id',v.id).order('data').then(function(res){
+      var dados=res.data||[];
+      var total=dados.reduce(function(s,r){return s+(r.valor||0);},0);
+      var auto=dados.filter(function(r){return !!r.origem;});
+      var livre=dados.filter(function(r){return !r.origem;});
+      var h2='<div class="pr-secao"><div class="pr-secao-titulo">&#128176; Orcamento</div>';
+      h2+='<div style="margin-bottom:12px"><div class="pr-orc-card pr-orc-dest"><div class="pr-orc-label">Total geral</div><div class="pr-orc-val">R$ '+fmt$(total)+'</div></div>';
+      h2+='<div class="pr-orc-card"><div class="pr-orc-label">Voos+Hotel+Passeios</div><div class="pr-orc-val">R$ '+fmt$(auto.reduce(function(s,r){return s+(r.valor||0);},0))+'</div></div></div>';
+      if(!dados.length) h2+='<p class="pr-vazio">Nenhuma despesa cadastrada.</p>';
+      else{ var rows=dados.map(function(r){return [r.descricao,r.categoria,fmtD(r.data),r.pago_por,'R$ '+fmt$(r.valor),r.obs];}); h2+=_prTabela(['Descricao','Categoria','Data','Pago por','Valor','Obs'],rows,''); }
+      return h2+'</div>';
+    }));
+  }
+  if(tudoFlag||secList.indexOf('checklist')!==-1){
+    promessas.push(sb.from('checklist').select('*').eq('viagem_id',v.id).order('criado_em').then(function(res){
+      var itens=res.data||[];
+      if(!itens.length) return '<div class="pr-secao"><div class="pr-secao-titulo">&#10003; Checklist</div><p class="pr-vazio">Nenhum item cadastrado.</p></div>';
+      var h2='<div class="pr-secao"><div class="pr-secao-titulo">&#10003; Checklist</div>';
+      itens.forEach(function(it){ h2+='<div class="pr-check-item"><div class="pr-check-box'+(it.concluido?' pr-check-ok':'')+'"></div><span style="'+(it.concluido?'text-decoration:line-through;color:#94A3B8':'')+'">'+it.descricao+(it.responsavel?' <em>('+ it.responsavel+')</em>':'')+'</span></div>'; });
+      return h2+'</div>';
+    }));
+  }
+  if(tudoFlag||secList.indexOf('documentos')!==-1){
+    promessas.push(sb.from('documentos').select('*, viagem_participantes(id,apelido,nome_externo,profiles(nome))').eq('viagem_id',v.id).order('criado_em').then(function(res){
+      var docs=res.data||[];
+      if(!docs.length) return '<div class="pr-secao"><div class="pr-secao-titulo">&#128196; Documentos</div><p class="pr-vazio">Nenhum documento cadastrado.</p></div>';
+      var h2='<div class="pr-secao"><div class="pr-secao-titulo">&#128196; Documentos</div>';
+      docs.forEach(function(d){
+        var vp=d.viagem_participantes;
+        var titular=vp?(vp.apelido||(vp.profiles?vp.profiles.nome:vp.nome_externo)||'--'):'--';
+        h2+='<div style="border:1px solid #D5E0F5;border-radius:8px;padding:10px 14px;margin-bottom:8px;break-inside:avoid">';
+        if(_printComFotos && d.foto_url){
+          h2+='<img src="'+d.foto_url+'" style="max-width:100%;max-height:200px;object-fit:contain;border-radius:6px;margin-bottom:8px;display:block"/>';
+        }
+        h2+='<strong>'+d.tipo+'</strong> &mdash; '+(d.descricao||'')+(d.numero?' | Num: '+d.numero:'')+' | Titular: '+titular+'</div>';
+      });
+      return h2+'</div>';
+    }));
+  }
+  Promise.all(promessas).then(function(secoes){
+    html+=secoes.join('');
+    html+='<div class="pr-footer">TripMate &mdash; Impresso em '+new Date().toLocaleDateString('pt-BR')+' | '+v.nome+' | '+v.destino+'</div>';
+    r.innerHTML=html;
+    setTimeout(function(){ window.print(); r.innerHTML=''; },300);
+  });
+}
+
+var _printComFotos = false;
+
+function togglePrintFotos(){
+  _printComFotos = !_printComFotos;
+  var slider = gi('print-fotos-slider');
+  var knob = gi('print-fotos-knob');
+  if(_printComFotos){
+    slider.style.background = 'var(--verde)';
+    knob.style.transform = 'translateX(18px)';
+  } else {
+    slider.style.background = '#ccc';
+    knob.style.transform = 'translateX(0)';
+  }
+}
+
+function imprimirSelecionados(){
+  fecharModal('m-print');
+  var secoes = [];
+  if(gi('pr-voos')&&gi('pr-voos').checked)         secoes.push('voos');
+  if(gi('pr-hospedagem')&&gi('pr-hospedagem').checked) secoes.push('hospedagem');
+  if(gi('pr-passeios')&&gi('pr-passeios').checked)   secoes.push('passeios');
+  if(gi('pr-orcamento')&&gi('pr-orcamento').checked)  secoes.push('orcamento');
+  if(gi('pr-checklist')&&gi('pr-checklist').checked)  secoes.push('checklist');
+  if(gi('pr-documentos')&&gi('pr-documentos').checked) secoes.push('documentos');
+  if(!secoes.length){ toast('Selecione pelo menos uma secao','err'); return; }
+  gerarRelatorio(secoes);
+}
+
+function imprimir(secao){
+  fecharModal('m-print');
+  gerarRelatorio(Array.isArray(secao)?secao:[secao]);
+}
+
+
+// IA & ROTEIRO
+function montarContextoViagem(){
+  var ctx = 'Voce e um assistente especializado em viagens. Aqui estao os detalhes da viagem atual:\n\n';ctx += 'Destino: ' + (VA.destino||'nao informado') + '\n';ctx += 'Nome da viagem: ' + (VA.nome||'nao informado') + '\n';if(VA.ida)   ctx += 'Data de ida: '   + fmtD(VA.ida)   + '\n';if(VA.volta) ctx += 'Data de volta: ' + fmtD(VA.volta) + '\n';if(VA.obs)   ctx += 'Observacoes: '   + VA.obs          + '\n';var participantes = PARTS.map(function(p){
+    return p.apelido||(p.profiles?p.profiles.nome:p.nome_externo)||'?';});
+  if(participantes.length) ctx += 'Participantes: ' + participantes.join(', ') + '\n';ctx += 'Responda em portugues brasileiro de forma clara, pratica e amigavel. ';ctx += 'Quando listar atrações, inclua dicas de horarios, tempo recomendado e se e adequado para criancas se houver criancas na viagem.';return ctx;
+}
+
+var _chatHistory = [];
+
+function enviarChat(){
+  var input = gi('chat-input');var msg = input.value.trim();
+  if(!msg) return;
+  input.value = '';var btnSend = gi('btn-chat-send');btnSend.disabled = true;
+
+  // adicionar mensagem do usuario
+  adicionarMsgChat(msg, 'user');// adicionar loading
+  var loadId = 'loading-' + Date.now();var loadDiv = document.createElement('div');loadDiv.className = 'chat-msg chat-loading';loadDiv.id = loadId;
+  loadDiv.textContent = 'Pensando...';gi('chat-msgs').appendChild(loadDiv);gi('chat-msgs').scrollTop = gi('chat-msgs').scrollHeight;// historico
+  _chatHistory.push({role:'user', content:msg});// chamar Claude API
+  // chamar via Edge Function do Supabase
+  sb.functions.invoke('ai-chat', {
+    body: { system: montarContextoViagem(), messages: _chatHistory }
+  }).then(function(res){
+    var data = res.data;
+    var resposta = data && data.content && data.content[0] ? data.content[0].text : 'Erro ao obter resposta.';
+    _chatHistory.push({role:'assistant', content:resposta});
+    var loadEl = gi(loadId); if(loadEl) loadEl.remove();
+    adicionarMsgChat(resposta, 'ia'); btnSend.disabled = false;
+  }).catch(function(err){
+    var loadEl = gi(loadId); if(loadEl) loadEl.remove();
+    adicionarMsgChat('Erro ao conectar com a IA. Tente novamente.', 'ia'); btnSend.disabled = false;
+  });
+}
+
+function renderMarkdown(texto){
+  var t = texto;
+  t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  t = t.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  var lines = t.split('\n');
+  var html = "";
+  var inList = false;
+  for(var i=0;i<lines.length;i++){
+    var line = lines[i];
+    var isList = /^[\-\*] /.test(line) || /^\d+\. /.test(line);
+    if(isList){
+      if(!inList){ html += '<ul>'; inList=true; }
+      html += '<li>' + line.replace(/^[\-\*] /,'').replace(/^\d+\. /,'') + '</li>';
+    } else {
+      if(inList){ html += '</ul>'; inList=false; }
+      if(line.trim()===''){ html += '<br>'; }
+      else { html += '<p>' + line + '</p>'; }
+    }
+  }
+  if(inList) html += '</ul>';
+  return html;
+}
+
+function adicionarMsgChat(texto, tipo){
+  var div = document.createElement('div');
+  div.className = 'chat-msg chat-' + tipo;
+  if(tipo === 'ia'){
+    div.innerHTML = renderMarkdown(texto);
+  } else {
+    div.textContent = texto;
+  }
+  gi('chat-msgs').appendChild(div);
+  gi('chat-msgs').scrollTop = gi('chat-msgs').scrollHeight;
+}
+
+function buscarAtracoes(){
+  var tipo = gi('roteiro-tipo').value;
+  var destino = VA ? VA.destino : '';
+  if(!destino){ toast('Viagem sem destino definido','err'); return; }
+  var localExtra = gi('roteiro-local') ? gi('roteiro-local').value.trim() : '';
+  var btn = gi('btn-buscar-atracoes');
+  btn.disabled = true; btn.innerHTML = 'Buscando...';
+  gi('grid-atracoes').innerHTML = '<div class="vazio"><div class="vazio-icone">&#8987;</div>Buscando atracoes...</div>';
+  // mapear tipos para termos de busca em portugues
+  var tiposMap = {
+    'tourist_attraction':'pontos turisticos',
+    'restaurant':'restaurantes',
+    'lodging':'hoteis',
+    'shopping_mall':'shopping',
+    'park':'parques',
+    'museum':'museus',
+    'amusement_park':'parques de diversao'
+  };
+  var query;
+  if(tipo === 'livre' || tipo === ''){
+    if(!localExtra){ toast('Digite o que procura no campo abaixo','err'); btn.disabled=false; btn.innerHTML='&#128269; Buscar'; return; }
+    query = localExtra + ' em ' + destino;
+  } else {
+    var tipoLabel = tiposMap[tipo] || tipo.replace('_',' ');
+    // se localExtra parece nome de estabelecimento (sem virgula, sem numero),
+    // buscar como "nome destino" em vez de "categoria em nome"
+    if(localExtra && !/[,0-9]/.test(localExtra) && localExtra.trim().indexOf(' ') === -1){
+      // parece um nome de lugar (uma palavra, sem virgula ou numero) — buscar direto com destino
+      query = localExtra + ' ' + destino;
+    } else {
+      var localBusca = localExtra || destino;
+      query = tipoLabel + ' em ' + localBusca;
+    }
+  }
+  sb.functions.invoke('places-search', { body: { query: query } }).then(function(res){
+    btn.disabled = false; btn.innerHTML = '&#128269; Buscar';
+    var data = res.data;
+    if(!data || !data.results || !data.results.length){
+      gi('grid-atracoes').innerHTML = '<div class="vazio">Nenhum resultado encontrado.</div>'; return;
+    }
+    window._atracoes_todos = data.results;
+    window._atracoes_pagina = 0;
+    gi('atracoes-toolbar').style.display='flex';
+    gi('filtro-atracao').value='';
+    _renderAtracoes(data.results.slice(0,20), true);
+  }).catch(function(err){
+    btn.disabled = false; btn.innerHTML = '&#128269; Buscar';
+    gi('grid-atracoes').innerHTML = '<div class="vazio">Erro ao buscar. Tente novamente.</div>';
+  });
+}
+
+function _buscarComSDK(tipo, destino){
+  // carregar Google Maps JS SDK se nao estiver carregado
+  if(typeof google === 'undefined'){var script = document.createElement('script');script.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_KEY + '&libraries=places&callback=_googleMapsReady';window._pendingSearch = {tipo:tipo, destino:destino};
+    document.head.appendChild(script);
+  } else {
+    _executarBuscaSDK(tipo, destino);
+  }
+}
+
+window._googleMapsReady = function(){
+  if(window._pendingSearch) _executarBuscaSDK(window._pendingSearch.tipo, window._pendingSearch.destino);
+};
+
+function _executarBuscaSDK(tipo, destino){
+  var btn = gi('btn-buscar-atracoes');btn.disabled = true; btn.innerHTML = 'Buscando...';var service = new google.maps.places.PlacesService(document.createElement('div'));service.textSearch({query: tipo.replace('_',' ') + ' em ' + destino, language:'pt-BR'}, function(results, status){btn.disabled = false; btn.innerHTML = '&#128269; Buscar';gi('grid-atracoes').innerHTML = '';if(status !== google.maps.places.PlacesServiceStatus.OK || !results.length){
+      gi('grid-atracoes').innerHTML = '<div class="vazio">Nenhum resultado encontrado.</div>';return;
+    }
+    results.slice(0,9).forEach(function(place){
+      var card = document.createElement('div'); card.className = 'atracao-card';var nome = document.createElement('div'); nome.className = 'atracao-nome'; nome.textContent = place.name;var tipo2 = document.createElement('div'); tipo2.className = 'atracao-tipo';tipo2.textContent = (place.types||[]).slice(0,2).join(', ').replace(/_/g,' ');var rating = document.createElement('div'); rating.className = 'atracao-rating';rating.textContent = place.rating ? '★ ' + place.rating : '';var end = document.createElement('div'); end.className = 'atracao-end';end.textContent = place.formatted_address||place.vicinity||'';var btnAdd = document.createElement('button');btnAdd.className = 'btn-add verde'; btnAdd.style.cssText = 'font-size:.78rem;padding:6px 12px;margin-top:4px';btnAdd.innerHTML = '+ Adicionar a passeios';btnAdd.onclick = (function(p){ return function(){ adicionarAtracao(p); }; })(place);
+      card.appendChild(nome); card.appendChild(tipo2);
+      if(place.rating) card.appendChild(rating);
+      card.appendChild(end); card.appendChild(btnAdd);
+      gi('grid-atracoes').appendChild(card);});
+  });
+}
+
+var _atracoes_todos = [];
+var _atracoes_pagina = 0;
+
+function _criarCardAtracao(place){
+  var card = document.createElement('div'); card.className = 'atracao-card';
+  card.onclick=(function(p){return function(){
+    if(!p.place_id){ abrirDetalhesPlace(p); return; }
+    card.style.opacity='.6';
+    sb.functions.invoke('places-search',{body:{placeId:p.place_id}}).then(function(r){
+      card.style.opacity='';
+      var det=(r.data&&r.data.result)?r.data.result:p;
+      abrirDetalhesPlace(det);
+    }).catch(function(){ card.style.opacity=''; abrirDetalhesPlace(p); });
+  };})(place);
+
+  // ícone de rating
+  var icon=document.createElement('div');
+  icon.style.cssText='width:44px;height:44px;border-radius:10px;background:var(--azul);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0';
+  var tipos={'amusement_park':'🎢','restaurant':'🍽️','lodging':'🏨','museum':'🏛️','park':'🌳','shopping_mall':'🛍️','tourist_attraction':'📍'};
+  icon.textContent = tipos[(place.types&&place.types[0])||''] || '📍';
+
+  var info=document.createElement('div'); info.className='atracao-info';
+  var nome=document.createElement('div'); nome.className='atracao-nome'; nome.textContent=place.name;
+  var rating=document.createElement('div'); rating.className='atracao-rating';
+  rating.textContent=place.rating?'★ '+place.rating+' ('+( place.user_ratings_total||0)+')':'Sem avaliações';
+  var end=document.createElement('div'); end.className='atracao-end'; end.textContent=place.formatted_address||'';
+  info.appendChild(nome); info.appendChild(rating); info.appendChild(end);
+
+  var btnAdd=document.createElement('button');
+  btnAdd.style.cssText='background:var(--verde);border:none;color:#fff;padding:6px 10px;border-radius:8px;font-size:.75rem;cursor:pointer;flex-shrink:0;white-space:nowrap';
+  btnAdd.innerHTML='+ Passeio';
+  btnAdd.onclick=(function(p){return function(e){e.stopPropagation();adicionarAtracao(p);};})(place);
+
+  card.appendChild(icon); card.appendChild(info); card.appendChild(btnAdd);
+  return card;
+}
+
+function _renderAtracoes(lista, resetar){
+  var g=gi('grid-atracoes');
+  if(resetar) g.innerHTML='';
+  lista.forEach(function(place){ g.appendChild(_criarCardAtracao(place)); });
+  gi('atracoes-count').textContent=g.children.length+' de '+(_atracoes_todos.length)+' resultados';
+  gi('btn-mais-wrap').style.display=g.children.length<_atracoes_todos.length?'block':'none';
+}
+
+function filtrarAtracoes(){
+  var termo=gi('filtro-atracao').value.toLowerCase();
+  var filtrados=_atracoes_todos.filter(function(p){ return p.name.toLowerCase().indexOf(termo)!==-1; });
+  gi('grid-atracoes').innerHTML='';
+  filtrados.forEach(function(place){ gi('grid-atracoes').appendChild(_criarCardAtracao(place)); });
+  gi('atracoes-count').textContent=gi('grid-atracoes').children.length+' de '+_atracoes_todos.length+' resultados';
+  gi('btn-mais-wrap').style.display='none';
+}
+
+function maisResultados(){
+  _atracoes_pagina++;
+  var inicio=(_atracoes_pagina*20);
+  var mais=_atracoes_todos.slice(inicio,inicio+20);
+  _renderAtracoes(mais, false);
+}
+
+function adicionarAtracao(place){
+  if(!VA){ toast('Abra uma viagem primeiro','err'); return; }
+  var tipo = (place.types&&place.types[0]||'Atracao').replace(/_/g,' ');
+  var obs = place.formatted_address||place.vicinity||'';
+  var dataEl = gi('place-data');
+  var data = dataEl ? dataEl.value || null : null;
+  sb.from('passeios').insert({
+    viagem_id: VA.id, nome: place.name, tipo: tipo, obs: obs, quantidade: 1, valor: 0, data: data
+  }).then(function(res){
+    if(res.error){ toast('Erro: '+res.error.message,'err'); return; }
+    renderParques();
+    toast(place.name + ' adicionado aos passeios!','ok');
+  });
+}
+
+function abrirDetalhesPlace(place){
+  gi('place-nome').textContent = place.name||'';
+  gi('place-tipo').textContent = (place.types||[]).slice(0,3).join(', ').replace(/_/g,' ');
+  gi('place-rating').textContent = place.rating ? '★ '+place.rating+' ('+(place.user_ratings_total||0)+' avaliações)' : '';
+  gi('place-end').textContent = place.formatted_address||place.vicinity||'';
+  // descricao editorial
+  var descDiv = gi('place-desc');
+  if(descDiv) descDiv.textContent = (place.editorial_summary&&place.editorial_summary.overview)||'';
+  gi('place-tel').textContent = place.formatted_phone_number ? '📞 '+place.formatted_phone_number : '';
+  gi('place-site').innerHTML = place.website ? '<a href="'+place.website+'" target="_blank" style="color:var(--azul);font-size:.85rem">🌐 Site oficial</a>' : '';
+  var horDiv=gi('place-horario'); horDiv.textContent='';
+  if(place.opening_hours&&place.opening_hours.open_now!==undefined){
+    horDiv.textContent = place.opening_hours.open_now ? '🟢 Aberto agora' : '🔴 Fechado agora';
+  }
+  var fotosDiv=gi('place-fotos'); fotosDiv.innerHTML='';
+  if(place.photos&&place.photos.length&&place.photos[0].photo_reference){
+    var img=document.createElement('img');
+    if(place.foto_url){
+      var img=document.createElement('img');
+      img.src=place.foto_url;
+      img.style.cssText='width:100%;height:200px;object-fit:cover';
+      img.onerror=function(){fotosDiv.innerHTML='';};
+      fotosDiv.appendChild(img);
+    }
+    img.style.cssText='width:100%;height:200px;object-fit:cover';
+    fotosDiv.appendChild(img);
+  }
+  var btn=gi('btn-place-add');
+  btn.onclick=function(){ adicionarAtracao(place); fecharModal('m-place'); };
+  abrirModal('m-place');
+}
+
+// inicializar chat ao abrir aba roteiro
+function toggleBuscaLivre(){
+  var tipo = gi('roteiro-tipo').value;
+  var localEl = gi('roteiro-local');
+  var labelEl = gi('roteiro-local-label');
+  var destino = VA ? VA.destino : 'destino';
+  if(tipo === 'livre' || tipo === ''){
+    localEl.placeholder = 'Digite o que procura: Outback, parque aquatico, museu de cera...';
+    localEl.setAttribute('required','');
+    if(labelEl) labelEl.textContent = 'obrigatorio';
+  } else {
+    localEl.placeholder = 'Local especifico (ex: Disney Springs) — vazio = ' + destino;
+    localEl.removeAttribute('required');
+    if(labelEl) labelEl.textContent = 'opcional';
+  }
+}
+
+function inicializarRoteiro(){
+  gi('roteiro-destino-nome').textContent = VA ? VA.destino : '--';
+  toggleBuscaLivre();
+  _chatHistory = [];
+  gi('chat-msgs').innerHTML = '';adicionarMsgChat('Ola! Sou seu assistente de viagem para ' + (VA?VA.destino:'sua viagem') + '. Ja tenho todas as informacoes: destino, datas e participantes. Pode me perguntar sobre roteiros, dicas de horarios, o que fazer com criancas, tempo em cada atracao e muito mais!', 'ia');}
+
+// TOAST
+var _tt;
+function toast(msg,tipo){
+  tipo=tipo||'ok';var t=gi('toast'); t.textContent=msg; t.className='show '+tipo;clearTimeout(_tt); _tt=setTimeout(function(){t.className='';},3500);
+}
+</script>
+<div id="print-report" style="display:none"></div>
+</body>
+</html>
