@@ -1205,7 +1205,7 @@ function fmtDT(s){
   try{  
     // extrair data e hora diretamente da string sem converter fuso  
     // formato: 2026-11-27T09:15:00 ou 2026-11-27T09:15  
-    var m = s.match(/^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2})/);  
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);  
     if(m) return m[3]+'/'+m[2]+' '+m[4]+':'+m[5];  
     var d=new Date(s); return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});  
   }catch(e){ return s; }  
@@ -1388,7 +1388,7 @@ function _criarCard(v, parts){
   var statusLabel={andamento:'Em andamento',proxima:'Proxima',passada:'Passada'}[status];var statusCss={andamento:'status-andamento',proxima:'status-proxima',passada:'status-passada'}[status];var hue=v.id.charCodeAt(0)*47%360, hue2=(hue+60)%360;  
   var card=document.createElement('div'); card.className='viagem-card';if(status==='passada') card.style.opacity='.75';card.onclick=(function(vo){return function(){abrirViagem(vo);};})(v);  
   var capa=document.createElement('div'); capa.className='vc-capa';capa.style.background='linear-gradient(135deg,hsl('+hue+',60%,35%),hsl('+hue2+',55%,55%))';if(v.capa_url){var img=document.createElement('img');img.src=v.capa_url;capa.appendChild(img);}var ov=document.createElement('div'); ov.className='vc-overlay';var pe=document.createElement('div'); pe.className='vc-pessoas'; pe.innerHTML='&#128101; '+total;var bs=document.createElement('div'); bs.className='vc-badge-status '+statusCss; bs.textContent=statusLabel;capa.appendChild(ov); capa.appendChild(pe); capa.appendChild(bs); card.appendChild(capa);  
-  var body=document.createElement('div'); body.className='vc-body';var nm=document.createElement('div'); nm.className='vc-nome'; nm.textContent=v.nome;var dt=document.createElement('div'); dt.className='vc-dest'; dt.innerHTML='&#128205; '+v.destino;var ds=document.createElement('div'); ds.className='vc-datas'; ds.textContent=fmtD(v.ida)+' \\u2192 '+fmtD(v.volta);var rl=document.createElement('span'); rl.className='vc-role'; rl.textContent=lbl;body.appendChild(nm); body.appendChild(dt); body.appendChild(ds); body.appendChild(rl);  
+  var body=document.createElement('div'); body.className='vc-body';var nm=document.createElement('div'); nm.className='vc-nome'; nm.textContent=v.nome;var dt=document.createElement('div'); dt.className='vc-dest'; dt.innerHTML='&#128205; '+v.destino;var ds=document.createElement('div'); ds.className='vc-datas'; ds.textContent=fmtD(v.ida)+' \u2192 '+fmtD(v.volta);var rl=document.createElement('span'); rl.className='vc-role'; rl.textContent=lbl;body.appendChild(nm); body.appendChild(dt); body.appendChild(ds); body.appendChild(rl);  
   card.appendChild(body); return card;  
 }  
 function _renderSecao(g,titulo,icone,viagens,parts,badgeCss){  
@@ -1423,7 +1423,7 @@ function abrirModalNovaViagem(){ _capaFile=null; gi('prev-capa').style.display='
 // DETALHE  
 function abrirViagem(v){  
   VA=v;  
-  gi('dh-nome').textContent=VA.nome;gi('dh-dest').innerHTML='&#128205; '+VA.destino;gi('dh-datas').textContent=fmtD(VA.ida)+' \\u2192 '+fmtD(VA.volta);var img=gi('dh-img');if(VA.capa_url){img.src=VA.capa_url;img.style.display='block';}else{img.src='';img.style.display='none';}sb.from('viagem_participantes').select('id,user_id,role,sem_acesso,nome_externo,apelido,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(res){PARTS=res.data||[];  
+  gi('dh-nome').textContent=VA.nome;gi('dh-dest').innerHTML='&#128205; '+VA.destino;gi('dh-datas').textContent=fmtD(VA.ida)+' \u2192 '+fmtD(VA.volta);var img=gi('dh-img');if(VA.capa_url){img.src=VA.capa_url;img.style.display='block';}else{img.src='';img.style.display='none';}sb.from('viagem_participantes').select('id,user_id,role,sem_acesso,nome_externo,apelido,profiles(id,nome,email,papel)').eq('viagem_id',VA.id).then(function(res){PARTS=res.data||[];  
     sb.from('convites_pendentes').select('*').eq('viagem_id',VA.id).eq('aceito',false).then(function(cr){CONVITES=cr.data||[];  
       gi('btn-upload-capa').style.display=podeGerenciar()?'':'none';gi('btn-editar-viagem').style.display=podeGerenciar()?'':'none';gi('btn-add-part').style.display=podeGerenciar()?'':'none';var tabs=document.querySelectorAll('.tab');var conts=document.querySelectorAll('.tab-conteudo');for(var i=0;i<tabs.length;i++) tabs[i].classList.toggle('ativa',i===0);for(var i=0;i<conts.length;i++) conts[i].classList.toggle('ativo',i===0);renderTrechos();renderVoos();renderHosp();renderParques();renderOrc();renderCheck();renderNotas();renderPart();renderDocs();  
       irPara('detalhe');});  
@@ -1444,7 +1444,7 @@ function renderVoos(){
       var mi=_meioInfo(r.meio);  
       var trechoNome='--';  
       if(r.trecho_id && TRECHOS && TRECHOS.length){var trechoMatch=TRECHOS.filter(function(t){return t.id===r.trecho_id;})[0]; if(trechoMatch) trechoNome=trechoMatch.destino;}  
-      tb.appendChild(trData([mi.ic+' '+mi.lbl,'<span onclick="editarVoo(\''+r.id+'\')" style="cursor:pointer;color:var(--azul2);font-weight:700;text-decoration:underline">'+(r.cia||'--')+'</span>',r.num||'--',(r.orig||'--')+' \\u2192 '+(r.dest||'--')+(trechoNome!=='--'?' <span style="color:var(--muted);font-size:.75rem">('+trechoNome+')</span>':''),fmtDT(r.partida),fmtDT(r.chegada),r.localizador||'--','R$ '+fmt$(r.valor),r.passageiros||'--',btnEdit("editarVoo('"+r.id+"')"),btnDel("delItem('voos','"+r.id+"',renderVoos,'voo:"+r.id+"')")],['Meio','Companhia','No.','Trecho','Partida','Chegada','Localizador','Valor','Passageiros','','']));  
+      tb.appendChild(trData([mi.ic+' '+mi.lbl,'<span onclick="editarVoo(\''+r.id+'\')" style="cursor:pointer;color:var(--azul2);font-weight:700;text-decoration:underline">'+(r.cia||'--')+'</span>',r.num||'--',(r.orig||'--')+' \u2192 '+(r.dest||'--')+(trechoNome!=='--'?' <span style="color:var(--muted);font-size:.75rem">('+trechoNome+')</span>':''),fmtDT(r.partida),fmtDT(r.chegada),r.localizador||'--','R$ '+fmt$(r.valor),r.passageiros||'--',btnEdit("editarVoo('"+r.id+"')"),btnDel("delItem('voos','"+r.id+"',renderVoos,'voo:"+r.id+"')")],['Meio','Companhia','No.','Trecho','Partida','Chegada','Localizador','Valor','Passageiros','','']));  
     });  
   });  
 }  
@@ -1668,7 +1668,7 @@ function _atualizarDestinoPrincipal(){
 // ordem dos passeios: por data e, dentro do mesmo dia, pelo numero digitado no inicio do nome  
 // ("1 Staten Island", "2. SeaGlass", "3- Jantar", "10) Wall Street"). sem numero vai pro fim, na ordem original.  
 function _numeroInicialPasseio(nome){  
-  var m=String(nome||'').match(/^\\s*(\\d{1,3})(?:\\s*[.)\-\\u2013:\\u00BA\\u00B0]\\s*|\\s+)(?=\\S)/);  
+  var m=String(nome||'').match(/^\s*(\d{1,3})(?:\s*[.)\-\u2013:\u00BA\u00B0]\s*|\s+)(?=\S)/);  
   return m?parseInt(m[1],10):null;  
 }  
 function _ordenarPasseios(lista){  
@@ -1699,7 +1699,7 @@ function renderCalendario(){
     if(erros.length){ toast('Erro ao carregar calendario: '+erros[0].message,'err'); }  
     var trechos=resArr[0].data||[], hosp=resArr[1].data||[], passeios=_ordenarPasseios(resArr[2].data||[]), transportes=resArr[3].data||[];  
     // valida se uma string e uma data ISO valida (YYYY-MM-DD)  
-    function dataValida(s){ return typeof s==='string' && /^\\d{4}-\\d{2}-\\d{2}/.test(s); }  
+    function dataValida(s){ return typeof s==='string' && /^\d{4}-\d{2}-\d{2}/.test(s); }  
     // determinar intervalo de datas da viagem: prioriza ida/volta oficiais da viagem.  
     // so usa trechos/hospedagem como fallback se a viagem nao tiver ida/volta definidos.  
     var datas=[];  
@@ -2428,7 +2428,7 @@ function fecharLightbox(){
 function abrirEditarViagem(){  
   if(!podeGerenciar()){toast('Sem permissao','err');return;}gi('ev-nome').value=VA.nome||''; gi('ev-dest').value=VA.destino||'';gi('ev-ida').value=VA.ida||''; gi('ev-volta').value=VA.volta||''; gi('ev-obs').value=VA.obs||'';abrirModal('m-editar-viagem');}  
 function salvarEdicaoViagem(){  
-  var nome=gi('ev-nome').value.trim(), dest=gi('ev-dest').value.trim();if(!nome||!dest){toast('Nome e destino sao obrigatorios','err');return;}var btn=document.querySelector('#m-editar-viagem .btn-ok');if(btn){btn.disabled=true;btn.textContent='Salvando...';}sb.from('viagens').update({nome:nome,destino:dest,ida:gi('ev-ida').value||null,volta:gi('ev-volta').value||null,obs:gi('ev-obs').value}).eq('id',VA.id).then(function(res){if(btn){btn.disabled=false;btn.textContent='Salvar alteracoes';}if(res.error){toast('Erro: '+res.error.message,'err');return;}VA.nome=nome; VA.destino=dest; VA.ida=gi('ev-ida').value; VA.volta=gi('ev-volta').value; VA.obs=gi('ev-obs').value;gi('dh-nome').textContent=nome; gi('dh-dest').innerHTML='&#128205; '+dest;gi('dh-datas').textContent=fmtD(VA.ida)+' \\u2192 '+fmtD(VA.volta);fecharModal('m-editar-viagem'); toast('Viagem atualizada!','ok');});  
+  var nome=gi('ev-nome').value.trim(), dest=gi('ev-dest').value.trim();if(!nome||!dest){toast('Nome e destino sao obrigatorios','err');return;}var btn=document.querySelector('#m-editar-viagem .btn-ok');if(btn){btn.disabled=true;btn.textContent='Salvando...';}sb.from('viagens').update({nome:nome,destino:dest,ida:gi('ev-ida').value||null,volta:gi('ev-volta').value||null,obs:gi('ev-obs').value}).eq('id',VA.id).then(function(res){if(btn){btn.disabled=false;btn.textContent='Salvar alteracoes';}if(res.error){toast('Erro: '+res.error.message,'err');return;}VA.nome=nome; VA.destino=dest; VA.ida=gi('ev-ida').value; VA.volta=gi('ev-volta').value; VA.obs=gi('ev-obs').value;gi('dh-nome').textContent=nome; gi('dh-dest').innerHTML='&#128205; '+dest;gi('dh-datas').textContent=fmtD(VA.ida)+' \u2192 '+fmtD(VA.volta);fecharModal('m-editar-viagem'); toast('Viagem atualizada!','ok');});  
 }  
 function excluirViagem(){  
   if(!confirm('Tem certeza que deseja EXCLUIR esta viagem? Todos os dados serao perdidos.')) return;if(!confirm('Confirma a exclusao de "'+VA.nome+'"?')) return;sb.from('viagens').delete().eq('id',VA.id).then(function(res){if(res.error){toast('Erro: '+res.error.message,'err');return;}fecharModal('m-editar-viagem'); toast('Viagem excluida','info'); irPara('viagens');});  
@@ -2452,7 +2452,7 @@ function carregarTodasViagens(){
       var total=v.viagem_participantes&&v.viagem_participantes[0]?v.viagem_participantes[0].count:0;  
       var status=_classificar(v);  
       var statusLabel={andamento:'Em andamento',proxima:'Proxima',passada:'Passada'}[status];var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--borda);cursor:pointer';row.onclick=(function(vo){return function(){abrirViagem(vo);};})(v);  
-      row.innerHTML='<div style="flex:1"><div style="font-weight:700;font-size:.95rem">'+v.nome+'</div><div style="font-size:.8rem;color:var(--muted)">&#128205; '+v.destino+'</div><div style="font-size:.78rem;color:var(--muted)">'+fmtD(v.ida)+' \\u2192 '+fmtD(v.volta)+'</div></div><span style="font-size:.75rem;font-weight:700">'+statusLabel+'</span><span style="font-size:.8rem;color:var(--muted)">&#128101; '+total+'</span>';lista.appendChild(row);  
+      row.innerHTML='<div style="flex:1"><div style="font-weight:700;font-size:.95rem">'+v.nome+'</div><div style="font-size:.8rem;color:var(--muted)">&#128205; '+v.destino+'</div><div style="font-size:.78rem;color:var(--muted)">'+fmtD(v.ida)+' \u2192 '+fmtD(v.volta)+'</div></div><span style="font-size:.75rem;font-weight:700">'+statusLabel+'</span><span style="font-size:.8rem;color:var(--muted)">&#128101; '+total+'</span>';lista.appendChild(row);  
     });  
   });  
 }  
@@ -2547,7 +2547,7 @@ function gerarRelatorio(secao){
       sb.from('voos').select('*').eq('viagem_id',v.id)  
     ]).then(function(resArr){  
       var trechos=resArr[0].data||[], hosp=resArr[1].data||[], passeios=_ordenarPasseios(resArr[2].data||[]), transportes=resArr[3].data||[];  
-      function dataValida(s){ return typeof s==='string' && /^\\d{4}-\\d{2}-\\d{2}/.test(s); }  
+      function dataValida(s){ return typeof s==='string' && /^\d{4}-\d{2}-\d{2}/.test(s); }  
       var datas=[];  
       if(dataValida(v.ida)) datas.push(v.ida.slice(0,10));  
       if(dataValida(v.volta)) datas.push(v.volta.slice(0,10));  
@@ -2781,26 +2781,26 @@ function imprimir(secao){
 }  
 // IA & ROTEIRO  
 function montarContextoViagem(dados){  
-  var ctx = 'Voce e um assistente de viagens com PODERES DE REGISTRO. Alem de responder perguntas, voce pode executar acoes no sistema de planejamento de viagens.\\n\\n';  
-  ctx += '=== SUAS CAPACIDADES ===\\n';  
-  ctx += 'Voce pode REGISTRAR e ALTERAR dados respondendo com JSON de acoes. Acoes disponiveis:\\n';  
-  ctx += '- add_passeio: {tipo:"add_passeio", nome, data(YYYY-MM-DD), obs} - adicionar passeio\\n';  
-  ctx += '- update_passeio: {tipo:"update_passeio", id, data(YYYY-MM-DD), nome, obs} - atualizar passeio existente\\n';  
-  ctx += '- add_checklist: {tipo:"add_checklist", descricao, responsavel} - adicionar item ao checklist\\n';  
-  ctx += '- check_item: {tipo:"check_item", id, concluido(true/false)} - marcar item checklist\\n';  
-  ctx += '- add_despesa: {tipo:"add_despesa", descricao, categoria, valor, data, pago_por} - registrar gasto\\n\\n';  
-  ctx += '=== REGRAS DE VALIDACAO ===\\n';  
-  ctx += '- Datas devem estar DENTRO do periodo da viagem\\n';  
-  ctx += '- Para passeios: verificar conflitos com outros passeios no mesmo dia\\n';  
-  ctx += '- Campos obrigatorios - passeio: nome; checklist: descricao; despesa: descricao e valor\\n';  
-  ctx += '- Antes de executar acoes, confirme com o usuario o que vai fazer\\n';  
-  ctx += '- Se faltar informacao obrigatoria, pergunte antes de agir\\n\\n';  
-  ctx += '=== FORMATO DE RESPOSTA COM ACOES ===\\n';  
-  ctx += 'Quando executar acoes, responda EXATAMENTE neste formato JSON (nao use markdown code blocks):\\n';  
-  ctx += '{"texto":"sua resposta aqui","acoes":[{"tipo":"add_passeio","nome":"Magic Kingdom","data":"2026-11-28"}]}\\n';  
-  ctx += 'Se nao houver acoes, responda normalmente em texto.\\n\\n';  
-  ctx += '=== VIAGEM ===\\n';  
-  ctx += 'Nome: ' + (VA.nome||'nao informado') + '\\n';  
+  var ctx = 'Voce e um assistente de viagens com PODERES DE REGISTRO. Alem de responder perguntas, voce pode executar acoes no sistema de planejamento de viagens.\n\n';  
+  ctx += '=== SUAS CAPACIDADES ===\n';  
+  ctx += 'Voce pode REGISTRAR e ALTERAR dados respondendo com JSON de acoes. Acoes disponiveis:\n';  
+  ctx += '- add_passeio: {tipo:"add_passeio", nome, data(YYYY-MM-DD), obs} - adicionar passeio\n';  
+  ctx += '- update_passeio: {tipo:"update_passeio", id, data(YYYY-MM-DD), nome, obs} - atualizar passeio existente\n';  
+  ctx += '- add_checklist: {tipo:"add_checklist", descricao, responsavel} - adicionar item ao checklist\n';  
+  ctx += '- check_item: {tipo:"check_item", id, concluido(true/false)} - marcar item checklist\n';  
+  ctx += '- add_despesa: {tipo:"add_despesa", descricao, categoria, valor, data, pago_por} - registrar gasto\n\n';  
+  ctx += '=== REGRAS DE VALIDACAO ===\n';  
+  ctx += '- Datas devem estar DENTRO do periodo da viagem\n';  
+  ctx += '- Para passeios: verificar conflitos com outros passeios no mesmo dia\n';  
+  ctx += '- Campos obrigatorios - passeio: nome; checklist: descricao; despesa: descricao e valor\n';  
+  ctx += '- Antes de executar acoes, confirme com o usuario o que vai fazer\n';  
+  ctx += '- Se faltar informacao obrigatoria, pergunte antes de agir\n\n';  
+  ctx += '=== FORMATO DE RESPOSTA COM ACOES ===\n';  
+  ctx += 'Quando executar acoes, responda EXATAMENTE neste formato JSON (nao use markdown code blocks):\n';  
+  ctx += '{"texto":"sua resposta aqui","acoes":[{"tipo":"add_passeio","nome":"Magic Kingdom","data":"2026-11-28"}]}\n';  
+  ctx += 'Se nao houver acoes, responda normalmente em texto.\n\n';  
+  ctx += '=== VIAGEM ===\n';  
+  ctx += 'Nome: ' + (VA.nome||'nao informado') + '\n';  
   // trechos ou destino simples  
   if(TRECHOS && TRECHOS.length){  
     // trecho selecionado na aba roteiro  
@@ -2809,63 +2809,63 @@ function montarContextoViagem(dados){
       TRECHOS.find(function(t){return t.id===trechoSelEl.value;}) : null;  
     if(trechoFoco){  
       ctx += 'TRECHO EM FOCO (usuario esta planejando este trecho): ';  
-      ctx += trechoFoco.destino + (trechoFoco.chegada?' | Chegada: '+fmtD(trechoFoco.chegada):'') + (trechoFoco.saida?' | Saida: '+fmtD(trechoFoco.saida):'') + '\\n\\n';  
+      ctx += trechoFoco.destino + (trechoFoco.chegada?' | Chegada: '+fmtD(trechoFoco.chegada):'') + (trechoFoco.saida?' | Saida: '+fmtD(trechoFoco.saida):'') + '\n\n';  
     }  
-    ctx += 'Itinerario completo com ' + TRECHOS.length + ' trecho(s):\\n';  
+    ctx += 'Itinerario completo com ' + TRECHOS.length + ' trecho(s):\n';  
     TRECHOS.forEach(function(t,idx){  
       ctx += '  Trecho ' + (idx+1) + ': ' + (t.destino||'?');  
       if(t.chegada) ctx += ' | Chegada: ' + fmtD(t.chegada);  
       if(t.saida) ctx += ' | Saida: ' + fmtD(t.saida);  
-      ctx += '\\n';  
+      ctx += '\n';  
     });  
   } else {  
-    ctx += 'Destino: ' + (VA.destino||'nao informado') + '\\n';  
+    ctx += 'Destino: ' + (VA.destino||'nao informado') + '\n';  
   }  
-  if(VA.ida)   ctx += 'Data de ida: '   + fmtD(VA.ida)   + '\\n';  
-  if(VA.volta) ctx += 'Data de volta: ' + fmtD(VA.volta) + '\\n';  
-  if(VA.obs)   ctx += 'Observacoes: '   + VA.obs         + '\\n';  
+  if(VA.ida)   ctx += 'Data de ida: '   + fmtD(VA.ida)   + '\n';  
+  if(VA.volta) ctx += 'Data de volta: ' + fmtD(VA.volta) + '\n';  
+  if(VA.obs)   ctx += 'Observacoes: '   + VA.obs         + '\n';  
   var participantes = PARTS.map(function(p){  
     return p.apelido||(p.profiles?p.profiles.nome:p.nome_externo)||'?';  
   });  
-  if(participantes.length) ctx += 'Participantes ('+participantes.length+'): ' + participantes.join(', ') + '\\n';  
+  if(participantes.length) ctx += 'Participantes ('+participantes.length+'): ' + participantes.join(', ') + '\n';  
   if(dados){  
     if(dados.voos&&dados.voos.length){  
-      ctx += '\\n=== VOOS (' + dados.voos.length + ') ===\\n';  
+      ctx += '\n=== VOOS (' + dados.voos.length + ') ===\n';  
       dados.voos.forEach(function(v){  
         ctx += '- ' + (v.cia||'') + ' ' + (v.num||'') + ': ' + (v.orig||'') + ' -> ' + (v.dest||'');  
         if(v.partida) ctx += ' | Partida: ' + fmtDT(v.partida);  
         if(v.chegada) ctx += ' | Chegada: ' + fmtDT(v.chegada);  
         if(v.localizador) ctx += ' | Loc: ' + v.localizador;  
         if(v.passageiros) ctx += ' | Passageiros: ' + v.passageiros;  
-        ctx += '\\n';  
+        ctx += '\n';  
       });  
     }  
     if(dados.hospedagem&&dados.hospedagem.length){  
-      ctx += '\\n=== HOSPEDAGEM (' + dados.hospedagem.length + ') ===\\n';  
+      ctx += '\n=== HOSPEDAGEM (' + dados.hospedagem.length + ') ===\n';  
       dados.hospedagem.forEach(function(h){  
         ctx += '- ' + (h.nome||'') + ': ' + (h.endereco||'');  
         if(h.checkin) ctx += ' | Check-in: ' + fmtD(h.checkin);  
         if(h.checkout) ctx += ' | Check-out: ' + fmtD(h.checkout);  
         if(h.localizador) ctx += ' | Loc: ' + h.localizador;  
-        ctx += '\\n';  
+        ctx += '\n';  
       });  
     }  
     if(dados.passeios&&dados.passeios.length){  
-      ctx += '\\n=== PASSEIOS (' + dados.passeios.length + ') ===\\n';  
+      ctx += '\n=== PASSEIOS (' + dados.passeios.length + ') ===\n';  
       dados.passeios.forEach(function(p){  
         ctx += '- [ID:' + p.id + '] ' + (p.nome||'');  
         if(p.data) ctx += ' | Data: ' + fmtD(p.data);  
         if(p.tipo) ctx += ' | Tipo: ' + p.tipo;  
         if(p.obs) ctx += ' | Obs: ' + p.obs;  
-        ctx += '\\n';  
+        ctx += '\n';  
       });  
     }  
     if(dados.checklist&&dados.checklist.length){  
       var pendentes = dados.checklist.filter(function(i){return !i.concluido;});  
       var concluidos = dados.checklist.filter(function(i){return i.concluido;});  
-      ctx += '\\n=== CHECKLIST ===\\n';  
-      ctx += 'Pendentes (' + pendentes.length + '):\\n' + pendentes.map(function(i){return '  - [ID:'+i.id+'] '+i.descricao+(i.responsavel?' ('+i.responsavel+')':'');}).join('\\n') + '\\n';  
-      ctx += 'Concluidos (' + concluidos.length + '):\\n' + concluidos.map(function(i){return '  - [ID:'+i.id+'] '+i.descricao;}).join('\\n') + '\\n';  
+      ctx += '\n=== CHECKLIST ===\n';  
+      ctx += 'Pendentes (' + pendentes.length + '):\n' + pendentes.map(function(i){return '  - [ID:'+i.id+'] '+i.descricao+(i.responsavel?' ('+i.responsavel+')':'');}).join('\n') + '\n';  
+      ctx += 'Concluidos (' + concluidos.length + '):\n' + concluidos.map(function(i){return '  - [ID:'+i.id+'] '+i.descricao;}).join('\n') + '\n';  
     }  
     if(dados.despesas&&dados.despesas.length){  
       var total = dados.despesas.reduce(function(s,d){return s+(d.valor||0);},0);  
@@ -2874,14 +2874,14 @@ function montarContextoViagem(dados){
         var c = d.categoria||'Outros';  
         cats[c] = (cats[c]||0) + (d.valor||0);  
       });  
-      ctx += '\\n=== ORCAMENTO ===\\n';  
-      ctx += 'Total geral: R$ ' + fmt$(total) + '\\n';  
+      ctx += '\n=== ORCAMENTO ===\n';  
+      ctx += 'Total geral: R$ ' + fmt$(total) + '\n';  
       Object.keys(cats).forEach(function(cat){  
-        ctx += '- ' + cat + ': R$ ' + fmt$(cats[cat]) + '\\n';  
+        ctx += '- ' + cat + ': R$ ' + fmt$(cats[cat]) + '\n';  
       });  
     }  
   }  
-  ctx += '\\nResponda SEMPRE em portugues brasileiro. Seja claro, pratico e amigavel. ';  
+  ctx += '\nResponda SEMPRE em portugues brasileiro. Seja claro, pratico e amigavel. ';  
   ctx += 'Use as informacoes da viagem para respostas personalizadas. ';  
   ctx += 'Quando sugerir passeios, verifique o que ja esta cadastrado para nao repetir. ';  
   ctx += 'Considere os participantes — se houver criancas, adapte as sugestoes.';  
@@ -2928,7 +2928,7 @@ function enviarChat(){
     // tentar parsear como JSON com acoes (buscar JSON mesmo que haja texto ao redor)  
     try {  
       // extrair JSON do texto (pode estar entre texto normal)  
-      var jsonMatch = textoRaw.match(/\{[\\s\\S]*"acoes"[\\s\\S]*\}/);  
+      var jsonMatch = textoRaw.match(/\{[\s\S]*"acoes"[\s\S]*\}/);  
       var parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(textoRaw);  
       if(parsed && parsed.acoes && parsed.acoes.length){  
         adicionarMsgChat(parsed.texto||textoRaw, 'ia');  
@@ -3001,17 +3001,17 @@ function executarAcoesIA(acoes){
 }  
 function renderMarkdown(texto){  
   var t = texto;  
-  t = t.replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>');  
-  t = t.replace(/\\*([^*]+)\\*/g, '<em>$1</em>');  
-  var lines = t.split('\\n');  
+  t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');  
+  t = t.replace(/\*([^*]+)\*/g, '<em>$1</em>');  
+  var lines = t.split('\n');  
   var html = "";  
   var inList = false;  
   for(var i=0;i<lines.length;i++){  
     var line = lines[i];  
-    var isList = /^[\-\\*] /.test(line) || /^\\d+\. /.test(line);  
+    var isList = /^[\-\*] /.test(line) || /^\d+\. /.test(line);  
     if(isList){  
       if(!inList){ html += '<ul>'; inList=true; }  
-      html += '<li>' + line.replace(/^[\-\\*] /,'').replace(/^\\d+\. /,'') + '</li>';  
+      html += '<li>' + line.replace(/^[\-\*] /,'').replace(/^\d+\. /,'') + '</li>';  
     } else {  
       if(inList){ html += '</ul>'; inList=false; }  
       if(line.trim()===''){ html += '<br>'; }  
@@ -3297,13 +3297,13 @@ function inicializarRoteiro(){
     _chatHistoryViagem = VA ? VA.id : null;  
     gi('chat-msgs').innerHTML = '';  
     var destino = VA ? VA.destino : 'sua viagem';  
-    adicionarMsgChat('Ola! Sou o assistente de ' + destino + ' e tenho acesso a TODOS os dados da viagem.\\n\\n' +  
-      'Posso te ajudar a:\\n' +  
-      '• Responder perguntas sobre roteiros, horarios e dicas\\n' +  
-      '• Adicionar passeios e itens ao checklist\\n' +  
-      '• Atualizar datas e informacoes da programacao\\n' +  
-      '• Registrar despesas\\n' +  
-      '• Identificar conflitos de datas ou problemas no roteiro\\n\\n' +  
+    adicionarMsgChat('Ola! Sou o assistente de ' + destino + ' e tenho acesso a TODOS os dados da viagem.\n\n' +  
+      'Posso te ajudar a:\n' +  
+      '• Responder perguntas sobre roteiros, horarios e dicas\n' +  
+      '• Adicionar passeios e itens ao checklist\n' +  
+      '• Atualizar datas e informacoes da programacao\n' +  
+      '• Registrar despesas\n' +  
+      '• Identificar conflitos de datas ou problemas no roteiro\n\n' +  
       'Exemplos: "Adiciona Magic Kingdom no dia 28", "Cria um checklist de documentos", "Qual dia esta mais cheio?", "Registra R$200 de jantar"', 'ia');  
   }  
 }  
