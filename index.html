@@ -1184,7 +1184,7 @@ function auditLog(acao, tabela, registroId, detalhes){
     tabela: tabela||null,  
     registro_id: registroId||null,  
     detalhes: detalhes||null  
-  }).catch(function(err){  
+  }).then(function(){}).catch(function(err){  
     console.warn('Nao foi possivel registrar a auditoria.', err);  
   });  
 }  
